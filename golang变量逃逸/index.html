@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.82.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title> &middot; My New Hugo Site</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="http://hurace.github.io/"><h1>My New Hugo Site</h1></a>
+      <p class="lead">
+      An elegant open source and mobile first theme for <a href="http://hugo.spf13.com">hugo</a> made by <a href="http://twitter.com/mdo">@mdo</a>. Originally made for Jekyll.
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="http://hurace.github.io/">Home</a> </li>
+        
+      </ul>
+    </nav>
+
+    <p>&copy; 2021. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="post">
+  <h1></h1>
+  <time datetime=0001-01-01T00:00:00Z class="post-date">Mon, Jan 1, 0001</time>
+  <p>ng内存分配逃逸分析</p>
+<h2 id="一关于-堆和栈">一、关于 堆和栈</h2>
+<blockquote>
+<p>栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统</p>
+</blockquote>
+<p><strong>申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响</strong></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f</span>() {
+    <span style="color:#a6e22e">temp</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+    <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">temp</span>
+}
+</code></pre></div><p>可以使用<code>go tool compile -m main.go|more</code>或者<code>go build -gcflags=-m main.go|more</code>来查看是否存在变量逃逸</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go tool compile -m main.go| more
+main.go:23:6: can inline main
+main.go:24:14: make<span style="color:#f92672">([]</span>int, 0<span style="color:#f92672">)</span> does not escape
+</code></pre></div><p>类似于上面代码里面的temp变量，只是内函数内部申请的临时变量，并不会作为返回值返回，它就是被编译器申请到栈里面。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">foo</span>() []<span style="color:#66d9ef">int</span> {
+    <span style="color:#a6e22e">temp</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>,<span style="color:#ae81ff">0</span>,<span style="color:#ae81ff">1</span>)
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">temp</span>
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go tool compile -m main.go| more
+main.go:3:6: can inline foo
+main.go:23:6: can inline main
+main.go:4:6: moved to heap: m2
+</code></pre></div><p>而上面这段代码，申请的代码一模一样，但是申请后作为返回值返回了，编译器会认为变量之后还会被使用，当函数返回之后并不会将其内存归还，那么它就会被申请到 堆 上面了。</p>
+<p><strong>申请到堆上面的内存才会引起垃圾回收，如果这个过程（指垃圾回收不断被触发）过于高频就会导致 gc 压力过大，程序性能出问题。</strong></p>
+<h2 id="二逃逸分析escape-analysis">二、逃逸分析（Escape analysis）</h2>
+<blockquote>
+<p>所谓逃逸分析，是指由编译器决定内存分配的位置，不需要程序员指定。</p>
+</blockquote>
+<p>在函数中申请一个新的对象：</p>
+<ul>
+<li>如果分配在 栈 中，则函数执行结束可自动将内存回收；</li>
+<li>如果分配在 堆 中，则函数执行结束可交给 GC 处理；</li>
+</ul>
+<blockquote>
+<p>对于函数外部没有引用的对象，也有可能放在堆中，比如内存过大超过栈的存储能力</p>
+</blockquote>
+<h2 id="三-逃逸场景">三、 逃逸场景</h2>
+<h3 id="31-指针逃逸">3.1 指针逃逸</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">foo</span>(<span style="color:#a6e22e">m1</span> <span style="color:#66d9ef">int</span>) <span style="color:#f92672">*</span><span style="color:#66d9ef">int</span> {
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">m2</span> = <span style="color:#ae81ff">11</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">m2</span>
+}
+</code></pre></div><h3 id="32-栈空间不足逃逸空间开辟过大">3.2 栈空间不足逃逸（空间开辟过大）</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">1000</span>, <span style="color:#ae81ff">1000</span>)
+    <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">s</span>
+}
+</code></pre></div><p>是否逃逸取决栈空间是否足够大</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span>-m main.go
+<span style="color:#75715e"># command-line-arguments</span>
+...
+./main.go:24:9: make<span style="color:#f92672">([]</span>int, 1000, 1000<span style="color:#f92672">)</span> does not escape
+</code></pre></div><p>所以只是1000的长度还不足以发生逃逸现象。然后就x10倍吧</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">10000</span>, <span style="color:#ae81ff">10000</span>)
+    <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">s</span>
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span>-m main.go
+<span style="color:#75715e"># command-line-arguments</span>
+./main.go:23:6: can inline main
+./main.go:24:9: make<span style="color:#f92672">([]</span>int, 10000, 10000<span style="color:#f92672">)</span> escapes to heap
+</code></pre></div><h3 id="33-动态类型逃逸不确定长度大小">3.3 动态类型逃逸（不确定长度大小）</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#e6db74">&#34;Escape&#34;</span>
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">s</span>)
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span>-m main.go
+<span style="color:#75715e"># command-line-arguments</span>
+./main.go:26:13: inlining call to fmt.Println
+./main.go:26:13: s escapes to heap
+./main.go:26:13: <span style="color:#f92672">[]</span>interface <span style="color:#f92672">{}</span> literal does not escape
+&lt;autogenerated&gt;:1: .this does not escape
+</code></pre></div><h3 id="34-闭包引用对象逃逸">3.4 闭包引用对象逃逸</h3>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">Fibonacci</span>() <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
+    <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">1</span>
+    <span style="color:#66d9ef">return</span> <span style="color:#66d9ef">func</span>() <span style="color:#66d9ef">int</span> {
+        <span style="color:#a6e22e">a</span>, <span style="color:#a6e22e">b</span> = <span style="color:#a6e22e">b</span>, <span style="color:#a6e22e">a</span><span style="color:#f92672">+</span><span style="color:#a6e22e">b</span>
+        <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">a</span>
+    }
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">f</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Fibonacci</span>()
+    <span style="color:#a6e22e">f</span>()
+}
+</code></pre></div><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-bash" data-lang="bash">$ go build -gcflags<span style="color:#f92672">=</span>-m main.go
+<span style="color:#75715e"># command-line-arguments</span>
+./main.go:24:9: can inline Fibonacci.func1
+./main.go:23:2: moved to heap: a
+./main.go:23:4: moved to heap: b
+./main.go:24:9: func literal escapes to heap
+</code></pre></div><h2 id="逃逸分析的作用是什么呢">逃逸分析的作用是什么呢？</h2>
+<ol>
+<li>逃逸分析的好处是为了减少 gc 的压力，不逃逸的对象分配在栈上，当函数返回时就回收来资源，不需要 gc 标记清除。</li>
+<li>逃逸分析完后可确定哪些变量可以分配在栈上，栈对分配比堆快，性能好</li>
+</ol>
+<h2 id="逃逸总结">逃逸总结</h2>
+<ul>
+<li>栈上分配内存比在堆中分配内存有更高的效率</li>
+<li>栈上分配的内存不需要 GC 处理</li>
+<li>堆上分配的内存使用完毕后会交给 GC 处理</li>
+<li>逃逸分析的目的是决定内存分配地址是栈还是堆</li>
+<li>逃逸分析在编译阶段完成</li>
+</ul>
+<h2 id="参考文献">参考文献</h2>
+<ol>
+<li><a href="https://driverzhang.github.io/post/golang">https://driverzhang.github.io/post/golang</a>内存分配逃逸分析/</li>
+</ol>
+
+</div>
+
+
+    </main>
+
+    
+      
+    
+  </body>
+</html>

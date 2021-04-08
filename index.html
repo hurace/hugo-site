@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-us" lang="en-us">
+<head>
+  <link href="https://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+  <meta name="generator" content="Hugo 0.82.0" />
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>My New Hugo Site</title>
+  <meta name="description" content="" />
+
+  
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/print.css" media="print">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/poole.css">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/syntax.css">
+  <link type="text/css" rel="stylesheet" href="http://hurace.github.io/css/hyde.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Abril+Fatface|PT+Sans:400,400i,700">
+
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="/apple-touch-icon-144-precomposed.png">
+  <link rel="shortcut icon" href="/favicon.png">
+
+  
+  <link href="http://hurace.github.io/index.xml" rel="alternate" type="application/rss+xml" title="My New Hugo Site" />
+  
+</head>
+
+  <body class=" ">
+  <aside class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      <a href="http://hurace.github.io/"><h1>My New Hugo Site</h1></a>
+      <p class="lead">
+      An elegant open source and mobile first theme for <a href="http://hugo.spf13.com">hugo</a> made by <a href="http://twitter.com/mdo">@mdo</a>. Originally made for Jekyll.
+      </p>
+    </div>
+
+    <nav>
+      <ul class="sidebar-nav">
+        <li><a href="http://hurace.github.io/">Home</a> </li>
+        
+      </ul>
+    </nav>
+
+    <p>&copy; 2021. All rights reserved. </p>
+  </div>
+</aside>
+
+    <main class="content container">
+    <div class="posts">
+<article class="post">
+  <h1 class="post-title">
+    <a href="http://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/"></a>
+  </h1>
+  <time datetime="0001-01-01T00:00:00Z" class="post-date">Mon, Jan 1, 0001</time>
+  ng内存分配逃逸分析
+一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
+ 申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响
+func f() { temp := make([]int,0,1) _ = temp } 可以使用go tool compile -m main.go|more或者go build -gcflags=-m main.go|more来查看是否存在变量逃逸
+$ go tool compile -m main.go| more main.go:23:6: can inline main main.go:24:14: make([]int, 0) does not escape 类似于上面代码里面的temp变量，只是内函数内部申请的临时变量，并不会作为返回值返回，它就是被编译器申请到栈里面。
+func foo() []int { temp := make([]int,0,1) return temp } $ go tool compile -m main.go| more main.go:3:6: can inline foo main.go:23:6: can inline main main.
+  
+  <div class="read-more-link">
+    <a href="/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/">Read More…</a>
+  </div>
+  
+</article>
+</div>
+    </main>
+
+    
+      
+    
+  </body>
+</html>
