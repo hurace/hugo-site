@@ -12,8 +12,7 @@
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
       <guid>https://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
-      <description>ng内存分配逃逸分析
-一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
+      <description>golang内存分配逃逸分析 一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
  申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响
 func f() { temp := make([]int,0,1) _ = temp } 可以使用go tool compile -m main.go|more或者go build -gcflags=-m main.go|more来查看是否存在变量逃逸
 $ go tool compile -m main.go| more main.go:23:6: can inline main main.go:24:14: make([]int, 0) does not escape 类似于上面代码里面的temp变量，只是内函数内部申请的临时变量，并不会作为返回值返回，它就是被编译器申请到栈里面。
