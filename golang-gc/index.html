@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en-us">
+<head>
+  <link href="http://gmpg.org/xfn/11" rel="profile">
+  <meta http-equiv="content-type" content="text/html; charset=utf-8">
+
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+
+  <title>Golang GC &middot; </title>
+
+  
+  <link rel="stylesheet" href="https://hurace.github.io/css/poole.css">
+  <link rel="stylesheet" href="https://hurace.github.io/css/hyde.css">
+  <link rel="stylesheet" href="https://hurace.github.io/css/poole-overrides.css">
+  <link rel="stylesheet" href="https://hurace.github.io/css/hyde-overrides.css">
+  <link rel="stylesheet" href="https://hurace.github.io/css/hyde-x.css">
+  
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=PT+Sans:400,400italic,700|Abril+Fatface">
+  <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+  
+
+  
+  <link rel="apple-touch-icon-precomposed" sizes="144x144" href="https://hurace.github.io/touch-icon-144-precomposed.png">
+  <link href="https://hurace.github.io/favicon.png" rel="icon">
+
+  
+  
+  
+  
+
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  
+</head>
+<body>
+<div class="sidebar">
+  <div class="container sidebar-sticky">
+    <div class="sidebar-about">
+      
+      <h1></h1>
+      
+    </div>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item"><a href="https://hurace.github.io/">Blog</a></li>
+      
+    </ul>
+
+    <ul class="sidebar-nav">
+      <li class="sidebar-nav-item">
+      
+      
+      
+      
+      
+      
+      
+      
+      
+      </li>
+    </ul>
+
+    
+
+    <p>Copyright &copy; 2021 <a href="https://hurace.github.io/license/">License</a><br/>
+       Powered by <a href="http://gohugo.io">Hugo</a> and <a href="https://github.com/zyro/hyde-x">Hyde-X</a></p>
+
+  </div>
+</div>
+
+
+<div class="content container">
+  <div class="post">
+    <h1 class="post-title">Golang GC</h1>
+    <h1 id="golang垃圾回收机制">golang垃圾回收机制</h1>
+<h2 id="golang-gc的发展">golang GC的发展</h2>
+<ul>
+<li>v1.1 STW</li>
+<li>v1.3 Mark STW，Sweep并行</li>
+<li>v1.5 三色标记法</li>
+<li>v1.8 hybrid write barrier</li>
+</ul>
+<h3 id="gc算法简介">GC算法简介</h3>
+<h4 id="引用计数reference-counting">引用计数（reference counting）</h4>
+<p>原理：每个单元维护一个域，保存其它单元指向它的引用数量。当引用数量为0时，将其回收。
+在每个对象内部维护一个整数值，叫做这个对象的引用计数，当对象被引用是引用计数加1，当对象不被引用引用计数减1，当引用计数为0时，自动销毁对象。</p>
+<h4 id="gc不回收什么">GC不回收什么</h4>
+<p>在我们程序中会使用两种内存，分别是堆（heap）和栈（stack），GC不负责回收栈中的内存。那么这是为什么呢？</p>
+<p>主要原因是栈是一块专用内存，专门为了函数执行而准备的，存储着函数中的局部变量以及调用栈。除此以外，栈中的数据都有一个特点——简单。比如局部变量就不能被函数外访问，所以这块内存用完就可以直接释放。正式因为这个特点，栈中的数据可以通过简单的编译器指令自动清理，也就不需要通过GC来回收了。</p>
+<h4 id="为什么需要垃圾回收">为什么需要垃圾回收</h4>
+<p>垃圾回收只负责回收堆中的数据。那么为什么堆中的数据需要自动垃圾回收呢？</p>
+<p>其实早期的语言是没有自动垃圾回收的。比如在 C 语言中就需要使用 malloc/free 来人为地申请或者释放堆内存。这种做法除了增加工作量以外，还容易出现其他问题。</p>
+<p>一种可能是并发问题，并发执行的程序容易错误地释放掉还在使用的内存。一种可能是重复释放内存，还有可能是直接忘记释放内存，从而导致内存泄露等问题。而这类问题不管是发现还是排查往往会花费很多时间和精力。所以现代的语言都有了这样的需求——一个自动内存管理工具。</p>
+<h4 id="什么是垃圾回收">什么是垃圾回收</h4>
+<p>我们说垃圾回收（Garbage Collection）的时候，其实说的是自动垃圾回收（Automatic Garbage Collection），一个自动回收堆内存的工具。</p>
+<h4 id="追踪式垃圾回收tracing-garbage-collection">追踪式垃圾回收（Tracing Garbage Collection）</h4>
+<p>主流的垃圾回收算法有两种，分别是追踪式垃圾回收和引用计数（Reference Counting）。三色标记算法属于追踪是回收算法的一种。</p>
+<p>追踪式算法的核心思想是判断一个对象是否可达，因为一旦这个对象不可达就可以GC回收了。那么怎么判断一个对象是否可达呢？第一步：找出所有的全局变量和当前函数栈里的变量，标记为可达。第二步：从已经标记的数据开始，进一步标记它们可访问的变量，以此类推，专业术语叫传递闭包。</p>
+<h4 id="为什么需要三色标记法">为什么需要三色标记法</h4>
+<p>在三色标记法之前有一个算法叫做Mark-And-Sweeping（标记清除），这个算法是严格按照追踪式算法的思路来实现的。这个算法会设置一个标志位来记录对象是否被使用。最开始所有的标记位都是0，如果发现对象是可达的就会置为1，一步步下去就会呈现一个类似树状的结果。等标记的步骤完成后，会将未标记的对象统一清理，再次把所有标记位设置成0方便下次清理。</p>
+<p>这个算法最大的问题是GC执行期间需要把整个程序完全暂停，不能异步进行GC操作。因为在不同阶段标记清除法的标识位0和1有不同的含义，那么新增的对象无论标记成什么都有可能意外删除这个对象。对实时性要求高的系统来说，这种需要长时间挂起的标记清除算法是不可接受的。所以就需要一个算法来解决GC运行时程序长时间挂起的问题，那就三色标记算法。</p>
+<h4 id="三色标记法好在哪里">三色标记法好在哪里</h4>
+<p>相比传统标记清除算法，三色标记最大的好处是可以异步执行。从而可以以中断时间极少的代价或者完全没有中断来进行整个GC。</p>
+<p>三色标记算法：首先将对象用三种颜色表示：白色、灰色、黑色。最开始所有对象都是白色的，然后把其中全局变量和函数栈里的对象置为灰色。第二步把灰色对象全部置为黑色，然后把原先灰色对象指向的变量都置为灰色，以此类推。等发现没有对象可以被置为灰色时，所有的白色变量就一定是需要被清理的垃圾了。</p>
+<p>三色标记法因为多了一个白色的状态来存放不确定的对象，所以可以异步地执行。</p>
+<h4 id="一次完整的垃圾回">一次完整的垃圾回</h4>
+<h5 id="阶段一mark-setup-标记准备stwstop-the-world">阶段一：Mark Setup 标记准备（STW：Stop The World）</h5>
+<h6 id="write-barrier">Write Barrier</h6>
+<p>Write Barrier是什么呢？三色标记算法是一种可以并发执行的算法。所以在运行过程中程序的函数栈可能会有新分配的对象，那么这些对象该怎么通知到GC，怎么给它们着色呢？这个时候就需要Write Barrier。Write Barrier主要做这样一件事情，修改原先写的逻辑，然后在对象新增的同时给它着色，并且着色为“灰色”。因此打开了Write Barrier可以保证了三色标记法在并发下安全正确的运行。</p>
+<h6 id="stop-the-world">Stop The World</h6>
+<p>在打开Write Barrier前有一个依赖，我们需要先停止所有的goroutine，也就是STW操作。那么接下来问题来了，GC该怎么通知所有的goroutine停止呢？</p>
+<p>在停止goroutine的方案中，Go语言采取的是合作式抢占模式。这种模式的做法是在程序编译阶段注入额外的代码，更精确的说法是在每个函数序言中增加一个合作式抢占点。因为一个goroutine中通常有无数调用函数的操作，选择在函数序言中增加抢占点可以较好地平衡性能和实时性之间点利弊。在通常情况下，一次Mark Setup会在10～30微秒之间。</p>
+<h5 id="阶段二marking-标记-concurrent">阶段二：Marking 标记 （Concurrent）</h5>
+<p>在第一阶段打开Write Barrier后，就进入第二阶段的标记了。Marking使用的算法就是三色标记法。</p>
+<h5 id="阶段三mark-termination-标记结束-stw">阶段三：Mark Termination 标记结束 （STW）</h5>
+<p>最重要的Marking阶段结束后就会进入Mark Termination阶段。这个阶段会关闭掉已经打开的Write Barrier，和Mark Setup阶段一样这个阶段也需要STW。</p>
+<p>通常情况下，标记结束阶段会耗时60～90微秒。</p>
+<h5 id="阶段四sweeping-清除-concurrent">阶段四：Sweeping 清除 （Concurrent）</h5>
+<p>最后一个阶段就是垃圾清理阶段，这个过程是并发进行的。</p>
+<h2 id="php垃圾回收机制">php垃圾回收机制</h2>
+<ul>
+<li>在php5.3版本之前，使用的垃圾回收机制是单纯的引用计数，即：
+<ul>
+<li>每个内存对象都分配一个计数器，当内存对象被变量引用时，计数器+1；</li>
+<li>当变量引用撤掉后（执行unset后），计数器-1；</li>
+<li>当计数器=0时，表明内存对象没有被引用，该内存对象则进行销毁，垃圾回收完成；</li>
+</ul>
+</li>
+</ul>
+<p>并且PHP在一个生命周期结束后就会释放此进程/线程所占内容，这种方式决定了php在前期不需要过多考虑内存的泄漏问题。</p>
+<p>但是当两个或多个对象互相引用形成环状后，内存对象的计数器则不会消减为0；这时候，这一组内存对象已经没用了，但是不能回收，从而导致内存泄漏的现象。</p>
+<ul>
+<li>PHP5.3开始，PHP使用了引用计数（reference counting）GC机制，同时使用根缓冲区机制，当php发现有存在循环引用的zval时，就会把其投入到根缓冲区，当根缓冲区达到配置文件中的指定数量后，就会进行垃圾回收，以此解决循环引用导致的内存泄漏问题。
+<ul>
+<li>如果引用计数减少到零，所在变量容器将被清除（free），不属于垃圾；</li>
+<li>如果一个zval的引用计数减少后还大于0，那么它会进入垃圾周期。其次，在一个垃圾周期中，通过检查引用计数是否减1，并且检查哪些变量容器的引用次数是零，来发现哪部分是垃圾。</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+</div>
+
+</body>
+</html>
+
