@@ -2,16 +2,16 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>My New Hugo Site</title>
-    <link>http://example.org/</link>
+    <link>https://hurace.github.io/</link>
     <description>Recent content on My New Hugo Site</description>
     <generator>Hugo -- gohugo.io</generator>
-    <language>en-us</language><atom:link href="http://example.org/index.xml" rel="self" type="application/rss+xml" />
+    <language>zh-cn</language><atom:link href="https://hurace.github.io/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title></title>
-      <link>http://example.org/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
+      <link>https://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>http://example.org/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
+      <guid>https://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
       <description>ng内存分配逃逸分析
 一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
  申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响
