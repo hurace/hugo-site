@@ -6,7 +6,21 @@
     <description>Recent content in Posts on 晓瑞</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 09 Apr 2021 11:07:32 +0800</lastBuildDate><atom:link href="https://hurace.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 09 Apr 2021 16:14:16 +0800</lastBuildDate><atom:link href="https://hurace.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go方法集</title>
+      <link>https://hurace.github.io/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</link>
+      <pubDate>Fri, 09 Apr 2021 16:14:16 +0800</pubDate>
+      
+      <guid>https://hurace.github.io/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</guid>
+      <description>一、什么是方法集 在go语言中，每个类型都有与之关联的方法，把这个类型的所有方法称为类型的方法集。例如：
+type Student struct { age int8 name string } func (s Student) showName() { fmt.Println(s.name) } func (s *Student) setName(newName string) { s.name = newName } 类型 Student 的方法集包含 showName() 方法 类型 *Student 的方法集包含 showName()、setName() 方法
+为什么呢？因为： 1、类型 T 方法集，包含全部 receiver T 方法 2、类型 *T 方法集，包含全部 receiver T + *T 方法
+二、方法集和方法接受者的关系 在上面的案例中，类型 Student 的方法法集并不包含了 setName() 方法，那么是不是 Student 类型变量，就不能调用 setName() 方法呢？即下面调用，是否会报错呢？
+s := Student{} s.setName(&amp;#34;lisi&amp;#34;) 其实，上面的调用是ok的。为什么呢？我们来回顾一下go语言的方法定义。
+1、参数 receiver 可任意命名，如方法中，不适用参数，可以省略参数名。 2、参数 receiver 类型可以是 T 或 *T ，但类型 T 不能为接口或指针类型。 3、不支持方法重载。 4、可以实例 value 或 pointer 调用全部的方法，编译器会自动转换。</description>
+    </item>
+    
     <item>
       <title>Go协程调度</title>
       <link>https://hurace.github.io/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</link>
