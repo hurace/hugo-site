@@ -69,9 +69,9 @@
 }
 </code></pre></div><p>类型 <code>Student</code> 的方法集包含 showName() 方法
 类型 <code>*Student</code> 的方法集包含 showName()、setName() 方法</p>
-<p>为什么呢？因为：
-<strong>1、类型 T 方法集，包含全部 receiver T 方法</strong>
-<strong>2、类型 *T 方法集，包含全部 receiver T + *T 方法</strong></p>
+<p>为什么呢？因为：</p>
+<p><strong>1、类型 T 方法集，包含全部 receiver T 方法</strong></p>
+<p><strong>2、类型 *T 方法集，包含全部 receiver T + *T 方法</strong></p>
 <h3 id="二方法集和方法接受者的关系">二、方法集和方法接受者的关系</h3>
 <p>在上面的案例中，类型 Student 的方法法集并不包含了 setName() 方法，那么是不是 Student 类型变量，就不能调用 setName() 方法呢？即下面调用，是否会报错呢？</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Student</span>{}
