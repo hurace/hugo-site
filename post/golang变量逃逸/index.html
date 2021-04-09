@@ -1,63 +1,59 @@
 <!DOCTYPE html>
 <html lang="zh-cn">
-    <head>
-		
-		
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-		<title>Golang 变量逃逸 &middot; 晓瑞</title>
-
-		
-  		<link rel="stylesheet" href="/css/style.css">
-		<link rel="stylesheet" href="/css/fonts.css">
-		
-		<link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32.png">
-		<link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16.png">
-		<link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon.png">
-
-		
-		<link href="" rel="alternate" type="application/rss+xml" title="晓瑞" />
-	</head>
-
-    <body>
-        		<nav class="nav">
-			<div class="nav-container">
-				<a href="/">
-					<h2 class="nav-title">晓瑞</h2>
-				</a>
-				<ul>
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> Golang 变量逃逸 | 晓瑞</title>
     
     
-        <li>
-            <a href="/post/">
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
                 
-                <span>Archives</span>
-                
-            </a>
-        </li>
-    
-</ul>
-			</div>
-		</nav>
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
 
-        
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>Golang 变量逃逸</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>April 08, 2021</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
 
-<main>
-	<div class="post">
-		<div class="post-info">
-    <span>Written by</span>
-        
-        <br>
-        <span>on&nbsp;</span><time datetime="2021-04-08 21:51:40 &#43;0800 CST">April 8, 2021</time>
-</div>
-
-		<h1 class="post-title">Golang 变量逃逸</h1>
-<div class="post-line"></div>
-
-		
-
-		<h2 id="一关于-堆和栈">一、关于 堆和栈</h2>
+    <div class="article-post">
+    <h2 id="一关于-堆和栈">一、关于 堆和栈</h2>
 <blockquote>
 <p>栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统</p>
 </blockquote>
@@ -166,24 +162,35 @@ main.go:4:6: moved to heap: m2
 <li><a href="https://driverzhang.github.io/post/golang">https://driverzhang.github.io/post/golang</a>内存分配逃逸分析/</li>
 </ol>
 
+    </div>
+</div>
 
-		
-	</div>
-
-	<div class="pagination">
-		<a href="/post/golang-gc/" class="right arrow">&#8594;</a>
-
-		<a href="#" class="top">Top</a>
-	</div>
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        
+        
+        <a rel="next" href="/post/golang-gc/" title="Next post (newer)">
+            <span>Next</span>
+            Golang GC
+            </a> 
+        
+    </nav>
+    
+</div>
 </main>
 
 
-        		<footer>
-			
-			<span>
-			&copy; <time datetime="2021-04-09 16:22:36.275257221 &#43;0800 CST m=&#43;0.113524404">2021</time> . Made with <a href='https://gohugo.io'>Hugo</a> using the <a href='https://github.com/EmielH/tale-hugo/'>Tale</a> theme.
-			</span>
-		</footer>
-
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
     </body>
 </html>
