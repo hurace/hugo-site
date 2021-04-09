@@ -34,10 +34,10 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     
     <item>
       <title>Golang GC</title>
-      <link>https://hurace.github.io/golang-gc/</link>
+      <link>https://hurace.github.io/post/golang-gc/</link>
       <pubDate>Thu, 08 Apr 2021 21:51:40 +0800</pubDate>
       
-      <guid>https://hurace.github.io/golang-gc/</guid>
+      <guid>https://hurace.github.io/post/golang-gc/</guid>
       <description>golang垃圾回收机制 golang GC的发展  v1.1 STW v1.3 Mark STW，Sweep并行 v1.5 三色标记法 v1.8 hybrid write barrier  GC算法简介 引用计数（reference counting） 原理：每个单元维护一个域，保存其它单元指向它的引用数量。当引用数量为0时，将其回收。 在每个对象内部维护一个整数值，叫做这个对象的引用计数，当对象被引用是引用计数加1，当对象不被引用引用计数减1，当引用计数为0时，自动销毁对象。
 GC不回收什么 在我们程序中会使用两种内存，分别是堆（heap）和栈（stack），GC不负责回收栈中的内存。那么这是为什么呢？
 主要原因是栈是一块专用内存，专门为了函数执行而准备的，存储着函数中的局部变量以及调用栈。除此以外，栈中的数据都有一个特点——简单。比如局部变量就不能被函数外访问，所以这块内存用完就可以直接释放。正式因为这个特点，栈中的数据可以通过简单的编译器指令自动清理，也就不需要通过GC来回收了。
@@ -59,10 +59,10 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     
     <item>
       <title></title>
-      <link>https://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
+      <link>https://hurace.github.io/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
       <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
       
-      <guid>https://hurace.github.io/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
+      <guid>https://hurace.github.io/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
       <description>golang内存分配逃逸分析 一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
  申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响
 func f() { temp := make([]int,0,1) _ = temp } 可以使用go tool compile -m main.go|more或者go build -gcflags=-m main.go|more来查看是否存在变量逃逸
