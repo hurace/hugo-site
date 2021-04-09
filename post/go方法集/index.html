@@ -77,10 +77,10 @@
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">s</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">Student</span>{}
 <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">setName</span>(<span style="color:#e6db74">&#34;lisi&#34;</span>)
 </code></pre></div><p>其实，上面的调用是ok的。为什么呢？我们来回顾一下go语言的方法定义。</p>
-<p><strong>1、参数 receiver 可任意命名，如方法中，不适用参数，可以省略参数名。</strong>
-<strong>2、参数 receiver 类型可以是 T 或 *T ，但类型 T 不能为接口或指针类型。</strong>
-<strong>3、不支持方法重载。</strong>
-<strong>4、可以实例 value 或 pointer 调用全部的方法，编译器会自动转换。</strong></p>
+<p><strong>1、参数 receiver 可任意命名，如方法中，不适用参数，可以省略参数名。</strong></p>
+<p><strong>2、参数 receiver 类型可以是 T 或 *T ，但类型 T 不能为接口或指针类型。</strong></p>
+<p><strong>3、不支持方法重载。</strong></p>
+<p><strong>4、可以实例 value 或 pointer 调用全部的方法，编译器会自动转换。</strong></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Student</span> <span style="color:#66d9ef">struct</span> {
     <span style="color:#a6e22e">age</span>  <span style="color:#66d9ef">int8</span>
     <span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>
@@ -129,8 +129,8 @@
 <p>接口可以嵌入到其他接口，或是嵌入结构体中。</p>
 <p>接口命名习惯以 er 结尾。</p>
 <h4 id="32-以实体类型实现接口和以指针类型实现接口的区别">3.2 以实体类型实现接口和以指针类型实现接口的区别</h4>
-<p><strong>1、若以实体类型 T 实现接口，不管是 T 类型的值，还是 T 类型的指针，都是实现了该接口。</strong>
-<strong>2、若以指针类型 *T 实现接口，只有 T 类型的指针，才实现了该接口。</strong></p>
+<p><strong>1、若以实体类型 T 实现接口，不管是 T 类型的值，还是 T 类型的指针，都是实现了该接口。</strong></p>
+<p><strong>2、若以指针类型 *T 实现接口，只有 T 类型的指针，才实现了该接口。</strong></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Animal</span> <span style="color:#66d9ef">interface</span> {
     <span style="color:#a6e22e">say</span>()
 }
@@ -206,11 +206,11 @@
 <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">name</span> = <span style="color:#e6db74">&#34;lisi&#34;</span>
 </code></pre></div><h4 id="42-值类型-t-嵌入和指针类型嵌入的区别">4.2 值类型 T 嵌入和指针类型嵌入的区别</h4>
 <p>go语言中类型的默认值。如下：</p>
-<p><strong>1、数值类型（int8、int16、uint等），默认值是 0</strong>
-<strong>2、布尔类型，默认值是 false</strong>
-<strong>3、字符串类型，默认值是 &ldquo;&quot;</strong>
-<strong>4、指针、chan、slice、map、interface等，默认值是 nil</strong>
-<strong>5、复合类型的默认值，为所包含类型的默认值。</strong></p>
+<p><strong>1、数值类型（int8、int16、uint等），默认值是 0</strong></p>
+<p><strong>2、布尔类型，默认值是 false</strong></p>
+<p><strong>3、字符串类型，默认值是 &ldquo;&quot;</strong></p>
+<p><strong>4、指针、chan、slice、map、interface等，默认值是 nil</strong></p>
+<p><strong>5、复合类型的默认值，为所包含类型的默认值。</strong></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Person</span> <span style="color:#66d9ef">struct</span> {
     <span style="color:#a6e22e">age</span> <span style="color:#66d9ef">int8</span>
     <span style="color:#a6e22e">name</span> <span style="color:#66d9ef">string</span>
@@ -250,9 +250,9 @@
 }
 </code></pre></div><p><strong>所以，针对指针嵌入类型，在使用前，需要赋值</strong></p>
 <h4 id="43-嵌入和方法集的关系">4.3 嵌入和方法集的关系</h4>
-<p><strong>1、类型 S 包含匿名字段 T ，则 S 和 *S 方法集包含 T 方法。</strong>
-<strong>2、类型 S 包含匿名字段 *T ，则 S 和 *S 方法集包含 T + *T 方法。</strong>
-<strong>3、不管嵌入的是 T 还是 *T ，*S 方法集，包含 T + *T 方法。</strong></p>
+<p><strong>1、类型 S 包含匿名字段 T ，则 S 和 *S 方法集包含 T 方法。</strong></p>
+<p><strong>2、类型 S 包含匿名字段 *T ，则 S 和 *S 方法集包含 T + *T 方法。</strong></p>
+<p><strong>3、不管嵌入的是 T 还是 *T ，*S 方法集，包含 T + *T 方法。</strong></p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Human</span> <span style="color:#66d9ef">interface</span> {
     <span style="color:#a6e22e">showName</span>()
     <span style="color:#a6e22e">setName</span>(<span style="color:#66d9ef">string</span>)
