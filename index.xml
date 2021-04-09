@@ -6,7 +6,24 @@
     <description>Recent content on 晓瑞</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Thu, 08 Apr 2021 21:51:40 +0800</lastBuildDate><atom:link href="https://hurace.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 09 Apr 2021 11:07:32 +0800</lastBuildDate><atom:link href="https://hurace.github.io/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Go协程调度</title>
+      <link>https://hurace.github.io/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</link>
+      <pubDate>Fri, 09 Apr 2021 11:07:32 +0800</pubDate>
+      
+      <guid>https://hurace.github.io/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</guid>
+      <description>单线程调度器0.x 多线程调度器1.0 任务窃取调度器1.1 抢占式调度器1.2  基于协作的抢占式调度器1.2 ～ 1.13 基于信号的抢占式调度器1.14 ～ 至今   非均匀存储访问调度器 - 提案  单线程调度器 0.x版本调度器只包含表示Goroutine的G和表示线程的M两种结构，全局也只有一个线程。
+多线程调度器 整体逻辑与单线程调度器没有太多区别，因为我们的程序中可能同时存在多个活跃线程，所以多线程调度器引入了GOMAXPROCS变量帮助我们灵活控制程序中的最大处理器数，即活跃线程数。
+该调度器有以下问题需要解决：
+ 调度器和锁是全局资源，所有的调度状态都是中心化存储的，锁竞争问题严重； 线程需要经常互相传递可运行的Goruntine，引入了大量的延迟； 每个线程都需要处理内存缓存，导致大量的内存占用并影响数据局部性； 系统调用频繁阻塞和解除阻塞正在运行的线程，增加了额外的开销；  任务窃取调度器 2012 年 Google 的工程师 Dmitry Vyukov 在 Scalable Go Scheduler Design Doc 中指出了现有多线程调度器的问题并在多线程调度器上提出了两个改进的手段：
+ 在当前的G-M模型中引入了处理器P，增加中间层； 在处理器P的基础上实现基于工作窃取的调度器；  当前处理器本地的运行队列中不包含Goroutine时，会触发工作窃取，从其他的处理器队列中随机获取一些Goruntine。
+处理器持有一个由可运行的Goroutine组成的环形的运行队列runq，还反向持有一个线程。调度器在调度时会从处理器的队列中选择队列头的Goroutine放到线程M上执行。
+抢占式任务调度 对 Go 语言并发模型的修改提升了调度器的性能，但是 1.1 版本中的调度器仍然不支持抢占式调度，程序只能依靠 Goroutine 主动让出 CPU 资源才能触发调度。Go 语言的调度器在 1.2 版本4中引入基于协作的抢占式调度解决下面的问题：
+ 某些Goroutine可以长时间占用线程，造成其它Goroutine的饥饿； 垃圾回收需要暂停整个程序（Stop-the-World，STW），最长可能需要几分钟的时间，导致整个程序无法工作；  基于协作的抢占式调度 基于协作的抢占式调度的工作原理：
+基于信号的抢占是调度 数据结构  G - 表示Goroutine，它是一个待执行的任务； M - 表示操作系统的线程，它由操作系统的调度器调度和管理； P - 表示处理器，它可以被看做运行在线程上的本地调度器；  G Goroutine是Go语言调度器中待执行的任务，它在调度器中的地位与线程在操作系统中差不多，但是它占用了更小的内存空间，也降低了上下文切换的开销；</description>
+    </item>
+    
     <item>
       <title>Golang GC</title>
       <link>https://hurace.github.io/post/golang-gc/</link>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html class="no-js" lang="zh-cn">
+<head>
+	<meta charset="UTF-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="theme-color" content="#1b1b1b">
+	<title>Go协程调度 | 晓瑞</title>
+	<script>(function(d,e){d[e]=d[e].replace("no-js","js");})(document.documentElement,"className");</script>
+	<meta name="description" content="">
+	<link rel="stylesheet" href="/css/bundle.css">
+	<link rel="icon" href="/icons/16.png" sizes="16x16" type="image/png">
+	<link rel="icon" href="/icons/32.png" sizes="32x32" type="image/png">
+		
+</head>
+<body class="body kind-page">
+	<header class="header">
+	<a class="logo" href="/">晓瑞</a>
+	
+<nav class="main-nav" role="navigation">
+	<button id="toggle" class="main-nav__btn" aria-label="Menu toggle" aria-expanded="false" tabindex="0">
+		<div class="main-nav__btn-box" tabindex="-1">
+			<svg class="main-nav__icon icon-menu" width="18" height="18" viewBox="0 0 18 18">
+				<path class="icon-menu__burger" d="M18 0v3.6H0V0h18zM0 10.8h18V7.2H0v3.6zM0 18h18v-3.6H0V18z"/>
+				<path class="icon-menu__x" d="M11.55 9L18 15.45 15.45 18 9 11.55 2.55 18 0 15.45 6.45 9 0 2.55 2.55 0 9 6.45 15.45 0 18 2.55 11.55 9z"/>
+			</svg>
+		</div>
+	</button>
+	<ul id="menu" class="main-nav__list">
+			<li class="main-nav__item">
+				<a class="main-nav__link" href="/post/">
+					
+					<span class="main-nav__text">Archives</span>
+					
+				</a>
+			</li>
+	</ul>
+</nav>
+</header>
+	<div class="primary">
+	
+	<main class="main">
+		
+		<div class="single block">
+			<article class="entry">
+				<h1 class="entry__title">Go协程调度</h1>
+				<div class="entry__content"><ul>
+<li>单线程调度器0.x</li>
+<li>多线程调度器1.0</li>
+<li>任务窃取调度器1.1</li>
+<li>抢占式调度器1.2
+<ul>
+<li>基于协作的抢占式调度器1.2 ～ 1.13</li>
+<li>基于信号的抢占式调度器1.14 ～ 至今</li>
+</ul>
+</li>
+<li>非均匀存储访问调度器 - 提案</li>
+</ul>
+<h5 id="单线程调度器">单线程调度器</h5>
+<p>0.x版本调度器只包含表示Goroutine的G和表示线程的M两种结构，全局也只有一个线程。</p>
+<h5 id="多线程调度器">多线程调度器</h5>
+<p>整体逻辑与单线程调度器没有太多区别，因为我们的程序中可能同时存在多个活跃线程，所以多线程调度器引入了<code>GOMAXPROCS</code>变量帮助我们灵活控制程序中的最大处理器数，即活跃线程数。</p>
+<p>该调度器有以下问题需要解决：</p>
+<ol>
+<li>调度器和锁是全局资源，所有的调度状态都是中心化存储的，锁竞争问题严重；</li>
+<li>线程需要经常互相传递可运行的Goruntine，引入了大量的延迟；</li>
+<li>每个线程都需要处理内存缓存，导致大量的内存占用并影响数据局部性；</li>
+<li>系统调用频繁阻塞和解除阻塞正在运行的线程，增加了额外的开销；</li>
+</ol>
+<h5 id="任务窃取调度器">任务窃取调度器</h5>
+<p>2012 年 Google 的工程师 Dmitry Vyukov 在 Scalable Go Scheduler Design Doc 中指出了现有多线程调度器的问题并在多线程调度器上提出了两个改进的手段：</p>
+<ol>
+<li>在当前的G-M模型中引入了处理器P，增加中间层；</li>
+<li>在处理器P的基础上实现基于工作窃取的调度器；</li>
+</ol>
+<p>当前处理器本地的运行队列中不包含Goroutine时，会触发工作窃取，从其他的处理器队列中随机获取一些Goruntine。</p>
+<p>处理器持有一个由可运行的Goroutine组成的环形的运行队列<code>runq</code>，还反向持有一个线程。调度器在调度时会从处理器的队列中选择队列头的Goroutine放到线程M上执行。</p>
+<h5 id="抢占式任务调度">抢占式任务调度</h5>
+<p>对 Go 语言并发模型的修改提升了调度器的性能，但是 1.1 版本中的调度器仍然不支持抢占式调度，程序只能依靠 Goroutine 主动让出 CPU 资源才能触发调度。Go 语言的调度器在 1.2 版本4中引入基于协作的抢占式调度解决下面的问题：</p>
+<ol>
+<li>某些Goroutine可以长时间占用线程，造成其它Goroutine的饥饿；</li>
+<li>垃圾回收需要暂停整个程序（Stop-the-World，STW），最长可能需要几分钟的时间，导致整个程序无法工作；</li>
+</ol>
+<h6 id="基于协作的抢占式调度">基于协作的抢占式调度</h6>
+<p>基于协作的抢占式调度的工作原理：</p>
+<h6 id="基于信号的抢占是调度">基于信号的抢占是调度</h6>
+<h4 id="数据结构">数据结构</h4>
+<ol>
+<li>G - 表示Goroutine，它是一个待执行的任务；</li>
+<li>M - 表示操作系统的线程，它由操作系统的调度器调度和管理；</li>
+<li>P - 表示处理器，它可以被看做运行在线程上的本地调度器；</li>
+</ol>
+<h5 id="g">G</h5>
+<p>Goroutine是Go语言调度器中待执行的任务，它在调度器中的地位与线程在操作系统中差不多，但是它占用了更小的内存空间，也降低了上下文切换的开销；</p>
+<p>Goroutine只存在于Go语言运行时，它是Go语言在用户态提供的线程，是一种粒度更细的资源调度单元；</p>
+<h5 id="m">M</h5>
+<p>Go语言并发模型中M是操作系统线程。调度器最多可以创建10000个线程，但是其中大多数的线程都不会执行用户代码（可能陷入系统调用），最多只会有<code>GOMAXPROCS</code>个活跃线程能够正常运行；</p>
+<h5 id="p">P</h5>
+<p>调度器中的处理器P是线程和Goroutine的中间层，它能提供线程需要的上下文环境，也会负责调度线程上的等待队列，通过处理器P的调度，每一个内核线程都能够执行多个Goroutine，它能在Goroutine进行一些I/O操作时及时让出计算资源，提高线程利用率。</p>
+<h3 id="参考文献">参考文献</h3>
+<ol>
+<li><a href="https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/">https://draveness.me/golang/docs/part3-runtime/ch06-concurrency/golang-netpoller/</a></li>
+</ol>
+</div>
+				
+			</article>
+		</div>
+	</main>
+	
+	
+
+
+
+	
+
+	</div>
+	<footer class="footer">
+	<div class="footer__copyright">© 2021 晓瑞. <span class="footer__copyright-credits">Powered by <a href="https://gohugo.io/" rel="nofollow noopener" target="_blank">Hugo</a> and <a href="https://github.com/vimux/binario" rel="nofollow noopener" target="_blank">Binario</a> theme.</span></div>
+</footer>
+<script src="/js/menu.js"></script>
+</body>
+</html>
