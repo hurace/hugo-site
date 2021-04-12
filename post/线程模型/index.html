@@ -63,7 +63,7 @@
 <p><code>用户线程</code>与<code>KSE</code>是多对多关系（<code>M:N</code>）。这是实现综合了前两种模型的优点，为一个进程中创建多个KSE，并且线程可以与不同的KSE在运行时进行<code>动态关联</code>，当某个KSE由于其上工作线程的阻塞操作被内核调度出CPU时，当前与其关联的其余用户线程可以重新与其他KSE建立关联关系。当然这种动态关联机制的实现很复杂，也需要用户自己去实现。</p>
 <p>Go语言中的并发就是使用的这种实现方式，Go为了实现该模型自己实现了一个<code>运行时调度器</code>来负责Go中的“线程”与KSE的动态关联。此模型有时也被称为<code>两级线程模型</code>，<code>即用户调度器实现用户线程到KSE的调度，内核调度器实现KSE到CPU上的调度</code>。</p>
 <p>三种模型的示意图如下：</p>
-<p><img src="../images/thread.jpeg" alt="avatar"></p>
+<p><img src="../../images/thread.jpeg" alt="avatar"></p>
 <h3 id="参考文献">参考文献</h3>
 <ol>
 <li><a href="https://www.jianshu.com/p/280c6a6f2594">https://www.jianshu.com/p/280c6a6f2594</a></li>
