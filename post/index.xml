@@ -79,6 +79,16 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     </item>
     
     <item>
+      <title>Golang面试题 顺序打印cat、dog、fish各10次</title>
+      <link>https://hurace.github.io/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</link>
+      <pubDate>Tue, 16 Mar 2021 22:43:15 +0800</pubDate>
+      
+      <guid>https://hurace.github.io/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</guid>
+      <description>编程题：3个函数分别打印cat、dog、fish，要求每个函数都要起一个goroutine，按照cat、dog、fish顺序打印在屏幕上10次。
+var count = 10 func main() { catCh := make(chan int) dogCh := make(chan int) fishCh := make(chan int) var wg sync.WaitGroup cat(catCh, fishCh, &amp;amp;wg) dog(dogCh, catCh, &amp;amp;wg) fish(fishCh, dogCh, &amp;amp;wg) wg.Wait() } func cat(catCh chan int, fishCh chan int, wg *sync.WaitGroup) { wg.Add(1) go func() { for i := 0; i &amp;lt; count; i++ { fmt.Println(&amp;#34;cat&amp;#34;, i) catCh &amp;lt;- i &amp;lt;-fishCh } wg.Done() }() } func dog(dogCh chan int, catCh chan int, wg *sync.</description>
+    </item>
+    
+    <item>
       <title>记defer、return、返回值的执行顺序</title>
       <link>https://hurace.github.io/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</link>
       <pubDate>Fri, 12 Mar 2021 10:08:07 +0800</pubDate>

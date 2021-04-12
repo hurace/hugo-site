@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> Golang面试题 顺序打印cat、dog、fish各10次 | 晓瑞</title>
+    
+    
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
+                
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
+
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>Golang面试题 顺序打印cat、dog、fish各10次</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>March 16, 2021</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
+
+    <div class="article-post">
+    <p>编程题：3个函数分别打印cat、dog、fish，要求每个函数都要起一个goroutine，按照cat、dog、fish顺序打印在屏幕上10次。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">count</span> = <span style="color:#ae81ff">10</span>
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">catCh</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>)
+    <span style="color:#a6e22e">dogCh</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>)
+    <span style="color:#a6e22e">fishCh</span> <span style="color:#f92672">:=</span> make(<span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>)
+
+    <span style="color:#66d9ef">var</span> <span style="color:#a6e22e">wg</span> <span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>
+
+    <span style="color:#a6e22e">cat</span>(<span style="color:#a6e22e">catCh</span>, <span style="color:#a6e22e">fishCh</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">wg</span>)
+    <span style="color:#a6e22e">dog</span>(<span style="color:#a6e22e">dogCh</span>, <span style="color:#a6e22e">catCh</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">wg</span>)
+    <span style="color:#a6e22e">fish</span>(<span style="color:#a6e22e">fishCh</span>, <span style="color:#a6e22e">dogCh</span>, <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">wg</span>)
+
+    <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Wait</span>()
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">cat</span>(<span style="color:#a6e22e">catCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">fishCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">wg</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>) {
+
+    <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)
+    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">count</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;cat&#34;</span>, <span style="color:#a6e22e">i</span>)
+            <span style="color:#a6e22e">catCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">i</span>
+            <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">fishCh</span>
+        }
+        <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>()
+    }()
+
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">dog</span>(<span style="color:#a6e22e">dogCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">catCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">wg</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>) {
+
+    <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)
+    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">count</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+            <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">catCh</span>
+            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;dog&#34;</span>, <span style="color:#a6e22e">i</span>)
+            <span style="color:#a6e22e">dogCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">i</span>
+        }
+        <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>()
+    }()
+
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fish</span>(<span style="color:#a6e22e">fishCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">dogCh</span> <span style="color:#66d9ef">chan</span> <span style="color:#66d9ef">int</span>, <span style="color:#a6e22e">wg</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">sync</span>.<span style="color:#a6e22e">WaitGroup</span>) {
+    <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Add</span>(<span style="color:#ae81ff">1</span>)
+    <span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#a6e22e">count</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+            <span style="color:#f92672">&lt;-</span><span style="color:#a6e22e">dogCh</span>
+            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;fish&#34;</span>, <span style="color:#a6e22e">i</span>)
+            <span style="color:#a6e22e">fishCh</span> <span style="color:#f92672">&lt;-</span> <span style="color:#a6e22e">i</span>
+        }
+        <span style="color:#a6e22e">wg</span>.<span style="color:#a6e22e">Done</span>()
+    }()
+
+}
+</code></pre></div><p>结果如下：</p>
+<pre><code>cat 0
+dog 0
+fish 0
+cat 1
+dog 1
+fish 1
+cat 2
+dog 2
+fish 2
+cat 3
+dog 3
+fish 3
+cat 4
+dog 4
+fish 4
+cat 5
+dog 5
+fish 5
+cat 6
+dog 6
+fish 6
+cat 7
+dog 7
+fish 7
+cat 8
+dog 8
+fish 8
+cat 9
+dog 9
+fish 9
+</code></pre>
+    </div>
+</div>
+
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        <a rel="prev" href="/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/" title="Previous post (older)">
+            <span>Previous</span>
+            记defer、return、返回值的执行顺序
+            </a>
+        
+        
+        
+        <a rel="next" href="/post/golang-gc/" title="Next post (newer)">
+            <span>Next</span>
+            Golang GC
+            </a> 
+        
+    </nav>
+    
+</div>
+</main>
+
+
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
+    </body>
+</html>
