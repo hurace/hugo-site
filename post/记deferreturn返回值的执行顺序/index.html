@@ -152,7 +152,29 @@ fun4:  2
 <li>defer声明时会先计算确定参数的值，defer推迟执行的仅仅是其函数体。</li>
 </ol>
 <p>因此，defer、return、返回值三者的执行顺序应该是：return最先给返回值赋值；接着defer开始执行一些收尾工作；最后RET指令携带返回值退出函数；</p>
-<h3 id="参考文献">参考文献</h3>
+<p>根据上面的结论，尝试给出下面函数的输出结果：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f1</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#a6e22e">r</span><span style="color:#f92672">++</span>
+    }()
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f2</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#a6e22e">r</span><span style="color:#f92672">++</span>
+    }()
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">8</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f3</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+   <span style="color:#a6e22e">t</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">5</span>
+   <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+      <span style="color:#a6e22e">t</span> = <span style="color:#a6e22e">t</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>
+   }()
+   <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">t</span>
+}
+</code></pre></div><h3 id="参考文献">参考文献</h3>
 <ol>
 <li><a href="https://my.oschina.net/henrylee2cn/blog/505535">https://my.oschina.net/henrylee2cn/blog/505535</a></li>
 </ol>
