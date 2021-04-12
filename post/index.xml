@@ -78,5 +78,17 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
 在停止goroutine的方案中，Go语言采取的是合作式抢占模式。这种模式的做法是在程序编译阶段注入额外的代码，更精确的说法是在每个函数序言中增加一个合作式抢占点。因为一个goroutine中通常有无数调用函数的操作，选择在函数序言中增加抢占点可以较好地平衡性能和实时性之间点利弊。在通常情况下，一次Mark Setup会在10～30微秒之间。</description>
     </item>
     
+    <item>
+      <title>记defer、return、返回值的执行顺序</title>
+      <link>https://hurace.github.io/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</link>
+      <pubDate>Fri, 12 Mar 2021 10:08:07 +0800</pubDate>
+      
+      <guid>https://hurace.github.io/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</guid>
+      <description>先来一道老生常谈的题：
+func main() { fmt.Println(&amp;#34;f1()的输出结果&amp;#34;) f1() fmt.Println(&amp;#34;f2()的输出结果&amp;#34;) f2() } func f1() { for i := 0; i &amp;lt; 5; i++ { defer func() { fmt.Println(i) }() } } func f2() { for i := 0; i &amp;lt; 5; i++ { defer func(i int) { fmt.Println(i) }(i) } } 以下是go1.15中的输出结果：
+f1()的输出结果 5 5 5 5 5 f2()的输出结果 4 3 2 1 0 给出如下代码的输出结果：
+func main() { fmt.Println(&amp;#34;fun1: &amp;#34;,fun1()) fmt.Println(&amp;#34;fun2: &amp;#34;,fun2()) fmt.Println(&amp;#34;fun3: &amp;#34;,fun3()) fmt.</description>
+    </item>
+    
   </channel>
 </rss>

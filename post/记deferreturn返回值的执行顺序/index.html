@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> 记defer、return、返回值的执行顺序 | 晓瑞</title>
+    
+    
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
+                
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
+
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>记defer、return、返回值的执行顺序</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>March 12, 2021</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
+
+    <div class="article-post">
+    <p>先来一道老生常谈的题：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;f1()的输出结果&#34;</span>)
+    <span style="color:#a6e22e">f1</span>()
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;f2()的输出结果&#34;</span>)
+    <span style="color:#a6e22e">f2</span>()
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f1</span>()  {
+    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">5</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+        <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">i</span>)
+        }()
+    }
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f2</span>()  {
+    <span style="color:#66d9ef">for</span> <span style="color:#a6e22e">i</span> <span style="color:#f92672">:=</span> <span style="color:#ae81ff">0</span>; <span style="color:#a6e22e">i</span> &lt; <span style="color:#ae81ff">5</span>; <span style="color:#a6e22e">i</span><span style="color:#f92672">++</span> {
+        <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">i</span> <span style="color:#66d9ef">int</span>) {
+            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#a6e22e">i</span>)
+        }(<span style="color:#a6e22e">i</span>)
+    }
+}
+</code></pre></div><p>以下是go1.15中的输出结果：</p>
+<pre><code>f1()的输出结果
+5
+5
+5
+5
+5
+f2()的输出结果
+4
+3
+2
+1
+0
+</code></pre><p>给出如下代码的输出结果：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;fun1: &#34;</span>,<span style="color:#a6e22e">fun1</span>())
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;fun2: &#34;</span>,<span style="color:#a6e22e">fun2</span>())
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;fun3: &#34;</span>,<span style="color:#a6e22e">fun3</span>())
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;fun4: &#34;</span>,<span style="color:#a6e22e">fun4</span>())
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fun1</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">r</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>
+    }()
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fun2</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
+        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">r</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>
+    }()
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">2</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fun3</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">r</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>
+    }(<span style="color:#a6e22e">r</span>)
+    <span style="color:#66d9ef">return</span> <span style="color:#a6e22e">r</span>
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">fun4</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+    <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>(<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
+        <span style="color:#a6e22e">r</span> = <span style="color:#a6e22e">r</span> <span style="color:#f92672">+</span> <span style="color:#ae81ff">5</span>
+    }(<span style="color:#a6e22e">r</span>)
+    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">2</span>
+}
+</code></pre></div><p>以下是go1.15中的输出结果：</p>
+<pre><code>fun1:  5
+fun2:  7
+fun3:  0
+fun4:  2
+</code></pre><div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#66d9ef">defer</span> <span style="color:#a6e22e">p</span>(<span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>())
+    <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Sleep</span>(<span style="color:#ae81ff">2</span> <span style="color:#f92672">*</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Second</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;1: &#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>())
+}
+
+<span style="color:#66d9ef">func</span> <span style="color:#a6e22e">p</span>(<span style="color:#a6e22e">t</span> <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Time</span>) {
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;2: &#34;</span>, <span style="color:#a6e22e">t</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;3: &#34;</span>, <span style="color:#a6e22e">time</span>.<span style="color:#a6e22e">Now</span>())
+}
+</code></pre></div><p>以下是go1.15中的输出结果：</p>
+<pre><code>1:  2021-03-12 10:57:04.710655 +0800 CST m=+2.003544505
+2:  2021-03-12 10:57:02.707403 +0800 CST m=+0.000081131
+3:  2021-03-12 10:57:04.711278 +0800 CST m=+2.004166869
+</code></pre><p>看到这些输出结果一脸懵逼的有没有？于是乎各种网上搜索，想要搞明白为啥会这样输出。最终得到如下结论：</p>
+<ol>
+<li>多个defer多执行顺序为“先进后出”；</li>
+<li>所有函数在执行RET返回指令之前，都会先检查是否存在defer语句，若存在则先逆序调用defer语句进行收尾工作再退出返回；</li>
+<li>匿名返回值是在return执行时被声明，有名返回值则是在函数声明的同时被声明，因此在defer语句中只能访问有名返回值，而不能直接返回匿名返回值；</li>
+<li>return其实应该包含前后两个步骤：第一步是给返回值赋值（若为有名返回值则直接赋值，若为匿名返回值则先声明再赋值）；第二步则是调用RET返回指令并传入返回值，而RET则会检查defer是否存在，若存在就先逆序插播defer语句，最后RET携带返回值退出函数；</li>
+<li>defer声明时会先计算确定参数的值，defer推迟执行的仅仅是其函数体。</li>
+</ol>
+<p>因此，defer、return、返回值三者的执行顺序应该是：return最先给返回值赋值；接着defer开始执行一些收尾工作；最后RET指令携带返回值退出函数；</p>
+<h3 id="参考文献">参考文献</h3>
+<ol>
+<li><a href="https://my.oschina.net/henrylee2cn/blog/505535">https://my.oschina.net/henrylee2cn/blog/505535</a></li>
+</ol>
+
+    </div>
+</div>
+
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        
+        
+        <a rel="next" href="/post/golang-gc/" title="Next post (newer)">
+            <span>Next</span>
+            Golang GC
+            </a> 
+        
+    </nav>
+    
+</div>
+</main>
+
+
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
+    </body>
+</html>
