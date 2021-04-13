@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Posts on 晓瑞</title>
-    <link>https://hurace.github.io/post/</link>
+    <link>https://hurace.net/post/</link>
     <description>Recent content in Posts on 晓瑞</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>zh-cn</language>
-    <lastBuildDate>Fri, 09 Apr 2021 16:14:16 +0800</lastBuildDate><atom:link href="https://hurace.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 09 Apr 2021 16:14:16 +0800</lastBuildDate><atom:link href="https://hurace.net/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Go方法集</title>
-      <link>https://hurace.github.io/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</link>
+      <link>https://hurace.net/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</link>
       <pubDate>Fri, 09 Apr 2021 16:14:16 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</guid>
+      <guid>https://hurace.net/post/go%E6%96%B9%E6%B3%95%E9%9B%86/</guid>
       <description>一、什么是方法集 在go语言中，每个类型都有与之关联的方法，把这个类型的所有方法称为类型的方法集。例如：
 type Student struct { age int8 name string } func (s Student) showName() { fmt.Println(s.name) } func (s *Student) setName(newName string) { s.name = newName } 类型 Student 的方法集包含 showName() 方法 类型 *Student 的方法集包含 showName()、setName() 方法
 为什么呢？因为：
@@ -25,10 +25,10 @@ s := Student{} s.setName(&amp;#34;lisi&amp;#34;) 其实，上面的调用是ok�
     
     <item>
       <title>Go协程调度</title>
-      <link>https://hurace.github.io/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</link>
+      <link>https://hurace.net/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</link>
       <pubDate>Wed, 07 Apr 2021 11:07:32 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</guid>
+      <guid>https://hurace.net/post/go%E5%8D%8F%E7%A8%8B%E8%B0%83%E5%BA%A6/</guid>
       <description>单线程调度器0.x 多线程调度器1.0 任务窃取调度器1.1 抢占式调度器1.2  基于协作的抢占式调度器1.2 ～ 1.13 基于信号的抢占式调度器1.14 ～ 至今   非均匀存储访问调度器 - 提案  单线程调度器 0.x版本调度器只包含表示Goroutine的G和表示线程的M两种结构，全局也只有一个线程。
 多线程调度器 整体逻辑与单线程调度器没有太多区别，因为我们的程序中可能同时存在多个活跃线程，所以多线程调度器引入了GOMAXPROCS变量帮助我们灵活控制程序中的最大处理器数，即活跃线程数。
 该调度器有以下问题需要解决：
@@ -42,10 +42,10 @@ s := Student{} s.setName(&amp;#34;lisi&amp;#34;) 其实，上面的调用是ok�
     
     <item>
       <title>Golang 变量逃逸</title>
-      <link>https://hurace.github.io/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
+      <link>https://hurace.net/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</link>
       <pubDate>Tue, 06 Apr 2021 21:51:40 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
+      <guid>https://hurace.net/post/golang%E5%8F%98%E9%87%8F%E9%80%83%E9%80%B8/</guid>
       <description>一、关于 堆和栈  栈 可以简单得理解成一次函数调用内部申请到的内存，它们会随着函数的返回把内存还给系统
  申请到 栈内存 好处：函数返回直接释放，不会引起垃圾回收，对性能没有影响
 func f() { temp := make([]int,0,1) _ = temp } 可以使用go tool compile -m main.go|more或者go build -gcflags=-m main.go|more来查看是否存在变量逃逸
@@ -55,10 +55,10 @@ func foo() []int { temp := make([]int,0,1) return temp } $ go tool compile -m ma
     
     <item>
       <title>Golang GC</title>
-      <link>https://hurace.github.io/post/golang-gc/</link>
+      <link>https://hurace.net/post/golang-gc/</link>
       <pubDate>Fri, 02 Apr 2021 21:51:40 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/golang-gc/</guid>
+      <guid>https://hurace.net/post/golang-gc/</guid>
       <description>golang垃圾回收机制 golang GC的发展  v1.1 STW v1.3 Mark STW，Sweep并行 v1.5 三色标记法 v1.8 hybrid write barrier  GC算法简介 引用计数（reference counting） 原理：每个单元维护一个域，保存其它单元指向它的引用数量。当引用数量为0时，将其回收。 在每个对象内部维护一个整数值，叫做这个对象的引用计数，当对象被引用是引用计数加1，当对象不被引用引用计数减1，当引用计数为0时，自动销毁对象。
 GC不回收什么 在我们程序中会使用两种内存，分别是堆（heap）和栈（stack），GC不负责回收栈中的内存。那么这是为什么呢？
 主要原因是栈是一块专用内存，专门为了函数执行而准备的，存储着函数中的局部变量以及调用栈。除此以外，栈中的数据都有一个特点——简单。比如局部变量就不能被函数外访问，所以这块内存用完就可以直接释放。正式因为这个特点，栈中的数据可以通过简单的编译器指令自动清理，也就不需要通过GC来回收了。
@@ -80,10 +80,10 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     
     <item>
       <title>Golang中的Mutex</title>
-      <link>https://hurace.github.io/post/golang%E4%B8%AD%E7%9A%84mutex/</link>
+      <link>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84mutex/</link>
       <pubDate>Thu, 18 Mar 2021 20:53:09 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/golang%E4%B8%AD%E7%9A%84mutex/</guid>
+      <guid>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84mutex/</guid>
       <description>原子操作：指那些不能够被打断的操作被称为原子操作，当有一个CPU在访问这块内容addr时，其他CPU就不能访问。
   CAS(Compare And Swap): 比较及交换，其实也属于原子操作，但它是非阻塞的，所以在被操作值被频繁变更的情况下，CAS操作并不那么容易成功，不得不利用for循环以进行多次尝试。
   自旋锁(spinlock)：自旋锁是指当一个线程在获取锁的时候，如果锁已经被其他线程获取，那么该线程将循环等待，然后不断地判断是否能够被成功获取，直到获取到锁才会退出循环。获取锁的线程一直处于活跃状态。
@@ -98,20 +98,20 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     
     <item>
       <title>Golang面试题 顺序打印cat、dog、fish各10次</title>
-      <link>https://hurace.github.io/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</link>
+      <link>https://hurace.net/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</link>
       <pubDate>Tue, 16 Mar 2021 22:43:15 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</guid>
+      <guid>https://hurace.net/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</guid>
       <description>编程题：3个函数分别打印cat、dog、fish，要求每个函数都要起一个goroutine，按照cat、dog、fish顺序打印在屏幕上10次。
 var count = 10 func main() { catCh := make(chan int) dogCh := make(chan int) fishCh := make(chan int) var wg sync.WaitGroup cat(catCh, fishCh, &amp;amp;wg) dog(dogCh, catCh, &amp;amp;wg) fish(fishCh, dogCh, &amp;amp;wg) wg.Wait() } func cat(catCh chan int, fishCh chan int, wg *sync.WaitGroup) { wg.Add(1) go func() { for i := 0; i &amp;lt; count; i++ { fmt.Println(&amp;#34;cat&amp;#34;, i) catCh &amp;lt;- i &amp;lt;-fishCh } wg.Done() }() } func dog(dogCh chan int, catCh chan int, wg *sync.</description>
     </item>
     
     <item>
       <title>记defer、return、返回值的执行顺序</title>
-      <link>https://hurace.github.io/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</link>
+      <link>https://hurace.net/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</link>
       <pubDate>Fri, 12 Mar 2021 10:08:07 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</guid>
+      <guid>https://hurace.net/post/%E8%AE%B0deferreturn%E8%BF%94%E5%9B%9E%E5%80%BC%E7%9A%84%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F/</guid>
       <description>先来一道老生常谈的题：
 func main() { fmt.Println(&amp;#34;f1()的输出结果&amp;#34;) f1() fmt.Println(&amp;#34;f2()的输出结果&amp;#34;) f2() } func f1() { for i := 0; i &amp;lt; 5; i++ { defer func() { fmt.Println(i) }() } } func f2() { for i := 0; i &amp;lt; 5; i++ { defer func(i int) { fmt.Println(i) }(i) } } 以下是go1.15中的输出结果：
 f1()的输出结果 5 5 5 5 5 f2()的输出结果 4 3 2 1 0 给出如下代码的输出结果：
@@ -120,10 +120,10 @@ func main() { fmt.Println(&amp;#34;fun1: &amp;#34;,fun1()) fmt.Println(&amp;#34;
     
     <item>
       <title>线程模型</title>
-      <link>https://hurace.github.io/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/</link>
+      <link>https://hurace.net/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/</link>
       <pubDate>Tue, 02 Mar 2021 13:52:27 +0800</pubDate>
       
-      <guid>https://hurace.github.io/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/</guid>
+      <guid>https://hurace.net/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/</guid>
       <description>线程的实现模型主要有3种：内核级线程模型、用户级线程模型、混合型线程模型。它们之间最大的区别在于线程与内核调度实体KSE（Kernel Scheduling Entity）之间的对应关系上。所谓的内核调度实体KSE就是指可以被操作系统内核调度器调度的对象实体，有些地方也称其为内核级线程，是操作系统内核的最小调度单元。
 内核级线程模型（一对一） 用户线程与KSE是1对1关系（1:1）。大部分编程语言的线程库（如Linux的pthread、Java的java.lang.Thread、C++的std::thread等）都是对操作系统的线程（内核级线程）的一层封装，创建出来的每个线程与一个不同的KSE静态关联，因此其调度完全由OS调度器来做。这种方式实现简单，直接借助OS提供的线程能力，并且不同用户线程之间一般也不会相互影响。但其创建、销毁以及多个线程之间的上下文切换等操作都是直接由OS层亲自来做，在需要使用大量线程的场景下对OS的性能影响会很大。
 用户及线程模型（多对一） 用户线程与KSE是多对一关系（M:1）。这种线程的创建、销毁以及多个线程之间的协调等操作都是由用户自己实现的线程库来负责，对OS内核透明，一个进程中所有创建的线程都与同一个KSE在运行时动态关联。现在有许多语言实现的协程基本上都属于这种方式。这种实现方式相比内核级线程可以做的很轻量级，对系统资源的消耗会小很多，因此可以创建的数量与上下文切换所花费的代价也会小很多。但该模型有个致命的弱点，如果我们在某个用户线程上调用阻塞式系统调用（如用阻塞方式read网络IO），那么一旦KSE因阻塞被内核调度出CPU的话，剩下的所有对应的用户线程全都会变为阻塞状态（整个进程挂起）。

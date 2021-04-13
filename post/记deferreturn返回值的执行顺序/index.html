@@ -150,9 +150,9 @@ fun4:  2
 <p><strong>4. return其实应该包含前后两个步骤：第一步是给返回值赋值（若为有名返回值则直接赋值，若为匿名返回值则先声明再赋值）；第二步则是调用RET返回指令并传入返回值，而RET则会检查defer是否存在，若存在就先逆序插播defer语句，最后RET携带返回值退出函数；</strong></p>
 <p><strong>5. defer声明时会先计算确定参数的值，defer推迟执行的仅仅是其函数体。</strong></p>
 <p>因此，defer、return、返回值三者的执行顺序应该是：return最先给返回值赋值；接着defer开始执行一些收尾工作；最后RET指令携带返回值退出函数；</p>
-<p>ruturn并非原子操作，分为赋值，和返回值两步操作；
-<code>匿名返回值</code>：因为返回值没有命名，所以return返回的就是这个变量赋值时候的值，defer中的操作不会修改返回值；
-<code>有名返回值</code>：因为所有的操作都是基于命名变量，返回值也是，所以defer操作的也是这个命名变量，会影响函数最终的返回值；</p>
+<p>ruturn并非原子操作，分为赋值，和返回值两步操作；</p>
+<p><code>匿名返回值</code>：因为返回值没有命名，所以return返回的就是这个变量赋值时候的值，defer中的操作不会修改返回值；</p>
+<p><code>有名返回值</code>：因为所有的操作都是基于命名变量，返回值也是，所以defer操作的也是这个命名变量，会影响函数最终的返回值；</p>
 <p>根据上面的结论，尝试给出下面函数的输出结果：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">f1</span>() (<span style="color:#a6e22e">r</span> <span style="color:#66d9ef">int</span>) {
     <span style="color:#66d9ef">defer</span> <span style="color:#66d9ef">func</span>() {
