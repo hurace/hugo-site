@@ -79,6 +79,24 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     </item>
     
     <item>
+      <title>Golang中的Mutex</title>
+      <link>https://hurace.github.io/post/golang%E4%B8%AD%E7%9A%84mutex/</link>
+      <pubDate>Thu, 18 Mar 2021 20:53:09 +0800</pubDate>
+      
+      <guid>https://hurace.github.io/post/golang%E4%B8%AD%E7%9A%84mutex/</guid>
+      <description>原子操作：指那些不能够被打断的操作被称为原子操作，当有一个CPU在访问这块内容addr时，其他CPU就不能访问。
+  CAS(Compare And Swap): 比较及交换，其实也属于原子操作，但它是非阻塞的，所以在被操作值被频繁变更的情况下，CAS操作并不那么容易成功，不得不利用for循环以进行多次尝试。
+  自旋锁(spinlock)：自旋锁是指当一个线程在获取锁的时候，如果锁已经被其他线程获取，那么该线程将循环等待，然后不断地判断是否能够被成功获取，直到获取到锁才会退出循环。获取锁的线程一直处于活跃状态。
+  信号量：实现休眠和唤醒协程的一种方式。
+ 信号量有两个操作 P和V P(S)：分配一个资源
+ 资源数减1：S=S-1 进行一下判断 如果 S&amp;lt;0，进入阻塞队列等待被释放 如果 S&amp;gt;0，直接返回  V(S)：释放一个资源
+ 资源数加1：S=S+1 进行如下判断 如果 S&amp;gt;0，直接返回 如果 S&amp;lt;=0，表示还有进程在请求资源，释放阻塞队列中的第一个等待进程  互斥锁 Lock-加锁分为两种情况：
+ 有冲突：通过调用semacquire函数进入休眠状态，等待其他协程释放锁的时候唤醒 无冲突：通过CAS把当前设置为加锁状态  UnLock-解锁分两步：
+ 解锁：通过CAS操作把当前状态设置为解锁状态 唤醒休眠协程：CAS操作把当前状态的 waiter 数减 1，然后唤醒休眠 goroutine  一代互斥锁的问题：  处于休眠中的 goroutine 优先级低于当前活跃的，unlock 解锁的瞬间最新 goroutine 会抢到锁 大多数锁的时间很短，所有的 goroutine 都要休眠，增加 runtime 调度开销  自旋锁 Lock分为三种情况：
+ 无冲突：通过 CAS 操作把当前状态设置为加锁状态 有冲突：开始自旋，并等待锁释放，如果其他 goroutine 在这段时间内释放了该锁，直接获得该锁；如果没有释放，进入 3 有冲突：通过调用 semacquire 函数来让当前 goroutine 进入等待状态，等待其他协程释放锁的时候唤醒  二代自旋锁的问题：  还是没有解决休眠进程优先级低的问题  公平锁 正常模式：</description>
+    </item>
+    
+    <item>
       <title>Golang面试题 顺序打印cat、dog、fish各10次</title>
       <link>https://hurace.github.io/post/golang%E9%9D%A2%E8%AF%95%E9%A2%98-%E9%A1%BA%E5%BA%8F%E6%89%93%E5%8D%B0catdogfish%E5%90%8410%E6%AC%A1/</link>
       <pubDate>Tue, 16 Mar 2021 22:43:15 +0800</pubDate>
