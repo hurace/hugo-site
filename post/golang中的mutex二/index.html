@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> Golang中的Mutex——二 | 晓瑞</title>
+    
+    
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
+                
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
+
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>Golang中的Mutex——二</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>March 19, 2021</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
+
+    <div class="article-post">
+    <h1 id="golang-中的-mutex">Golang 中的 Mutex</h1>
+<p>以下内容是根据视频地址整理的笔记，看视频更直观。</p>
+<h2 id="总纲">总纲</h2>
+<ol>
+<li><a href="https://www.bilibili.com/video/BV15V411n7fM?p=1">https://www.bilibili.com/video/BV15V411n7fM?p=1</a></li>
+</ol>
+<p>Mutex 这个名称的由来，应该是 mutual exclusion 的前缀组合，俗称“互斥体”或“互斥锁”。go 语言 sync 包中 Mutex 的数据结构是这样的：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">type</span> <span style="color:#a6e22e">Mutex</span> <span style="color:#66d9ef">struct</span> {
+    <span style="color:#a6e22e">state</span> <span style="color:#66d9ef">int32</span>
+    <span style="color:#a6e22e">sema</span> <span style="color:#66d9ef">uint32</span>
+}
+</code></pre></div><p>因为足够简单，所以不需要额外的初始化，此结构的零值就是一个有效的互斥锁，处于 Unlocked 的状态。state 存储的是互斥锁的状态，加锁和解锁都是通过 atomic 包提供的函数原子性的操作该字段。sema 用作一个信号量，主要用作等待队列。Mutex 有两种模式，在正常模式下，一个尝试加锁的 goroutine 会先自旋几次，尝试通过原子操作获得锁，若几次自旋之后仍不能获得锁，则通过信号量排队等待。所有的等待者会按照先入先出（FIFO）的顺序排队，但是当锁被释放，第一个等待者被唤醒后并不会直接拥有锁，而是需要和后来者竞争，也就是那些处于自旋阶段，尚未排队等待的 goroutine，这种情况下后来者更有优势，一方面，它们正在 CPU 上运行，自然比刚被唤醒的 goroutine 更有优势，另一方面处于自旋状态的 goroutine 可以有很多，而被唤醒的 goroutine 每次只有一个，所以被唤醒的 goroutine 有很大概率拿不到锁，这种情况下它会被重新插入到队列的头部，而不是尾部。而当一个 goroutine 本次加锁等待的时间超过了 1ms 后，它会把当前 Mutex 从正常模式切换至“饥饿模式”，在饥饿模式下，Mutex 的所有权从执行 Unlock 的 goroutine 直接传递给等待队列头部的 goroutine。后来者不会自旋，也不会尝试获得锁，即使 Mutex 处于 Unlocked 状态。它们会直接从队列的尾部排队等待。当一个等待者获得锁之后，它会在一下两种情况时，将 Mutex 由饥饿模式切换回正常模式：一种情况是，它的等待时间小于 1ms，也就是它刚来不久。第二种情况是，它是最后一个等待者，等待队列已经空了，后面自然就没有饥饿的 goroutine 了。综上所述，在正常模式下自旋和排队是同时存在的。执行 Lock 的 goroutine 会先一边自旋，尝试过几次后如果还没拿到锁，就需要去排队等待了。这种排队之前先让大家来抢的模式，能够有更高的吞吐量，因为频繁的挂起、唤醒 goroutine 会带来较多的开销。但是又不能无限制的自旋，要把自选的开销控制在较小的范围内。所以，在正常模式下，Mutex 有更好的性能，但是可能会出现队列尾端的 goroutine 迟迟抢不到锁（尾端延迟）的情况。而饥饿模式下不再自旋尝试，所有 goroutine 都要排队，严格的先来后到，对于防止出现尾端延迟来讲特别重要。</p>
+<h2 id="理想状态的锁唯快不破">理想状态的锁——唯快不破</h2>
+<ol start="2">
+<li><a href="https://www.bilibili.com/video/BV15V411n7fM?p=2">https://www.bilibili.com/video/BV15V411n7fM?p=2</a></li>
+</ol>
+<p>继续 go 语言 Mutex 这一次我们来展开 Lock 和 Unlock 的逻辑。首先来看一下关于 Mutex.state 的几个常量的定义：state 的类型是 int32，其中第一位用作锁状态标识，置为1就标识已加锁，对应掩码常量为 mutexLocked。第二位用于记录是否已有 goroutine 被唤醒了，置为1表示已唤醒。对应掩码常量为 mutexWoken。第三位标识 Mutex 的工作模式，0代表正常模式，1代表饥饿模式，对应掩码常量为 mutexStarving。而常量 mutexWaiterShift 等于3，表示除了最低3位以外，state 的其他位用来记录有多少个等待者在排队。然后再来看一下 Lock 和 Unlock 方法，</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mutex</span>) <span style="color:#a6e22e">Lock</span>() {
+    <span style="color:#75715e">// Fast path: grab unlocked mutex.
+</span><span style="color:#75715e"></span>    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">CompareAndSwapInt32</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">state</span>, <span style="color:#ae81ff">0</span>, <span style="color:#a6e22e">mutexLocked</span>) {
+        <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">race</span>.<span style="color:#a6e22e">Enabled</span> {
+            <span style="color:#a6e22e">race</span>.<span style="color:#a6e22e">Acquire</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">m</span>))
+        }
+        <span style="color:#66d9ef">return</span>
+    }
+    <span style="color:#75715e">// Slow path (outlined so that the fast path can be inlined)
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">lockSlow</span>()
+}
+
+<span style="color:#66d9ef">func</span> (<span style="color:#a6e22e">m</span> <span style="color:#f92672">*</span><span style="color:#a6e22e">Mutex</span>) <span style="color:#a6e22e">Unlock</span>() {
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">race</span>.<span style="color:#a6e22e">Enabled</span> {
+        <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">state</span>
+        <span style="color:#a6e22e">race</span>.<span style="color:#a6e22e">Release</span>(<span style="color:#a6e22e">unsafe</span>.<span style="color:#a6e22e">Pointer</span>(<span style="color:#a6e22e">m</span>))
+    }
+
+    <span style="color:#75715e">// Fast path: drop lock bit.
+</span><span style="color:#75715e"></span>    <span style="color:#a6e22e">new</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">atomic</span>.<span style="color:#a6e22e">AddInt32</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">state</span>, <span style="color:#f92672">-</span><span style="color:#a6e22e">mutexLocked</span>)
+    <span style="color:#66d9ef">if</span> <span style="color:#a6e22e">new</span> <span style="color:#f92672">!=</span> <span style="color:#ae81ff">0</span> {
+        <span style="color:#75715e">// Outlined slow path to allow inlining the fast path.
+</span><span style="color:#75715e"></span>        <span style="color:#75715e">// To hide unlockSlow during tracing we skip one extra frame when tracing GoUnblock.
+</span><span style="color:#75715e"></span>        <span style="color:#a6e22e">m</span>.<span style="color:#a6e22e">unlockSlow</span>(<span style="color:#a6e22e">new</span>)
+    }
+}
+</code></pre></div><p>两个方法中主要通过 atomic 函数实现了 Fast path，相应的 Slow path 被简单单独放在了 lockSlow 和 unlockSlow 方法中。根据源码注释的说法，这样是为了便于编译器对 Fast path 进行内联优化，Lock 方法的 Fast path，期望 Mutex 处于 Unlocked 状态，没有 goroutine 在排队，更不会饥饿，理想状况下，一个 CAS 操作就可以获得锁，但是如果 CAS 操作没能获得锁，就需要进入 Slow path，也就是 lockSlow 方法。Unlock 方法同理，首先通过原子操作从 state 中减去 mutexLocked，也就是释放锁，然后根据 state 的新值来判断是否需要执行 Slow path。如果新值为0，也就意味着没有其他 goroutine 在排队，所以不需要执行额外操作。如果新值不为0，那就需要进入 slow path，看看是不是需要唤醒某个 goroutine。lock 和 unlock 的 fast path 就是这样。接下来我们展开slow path 的主要逻辑。</p>
+<h2 id="兼顾吞吐量和公平性收放自如">兼顾吞吐量和公平性——收放自如</h2>
+<ol start="3">
+<li><a href="https://www.bilibili.com/video/BV15V411n7fM?p=3&amp;spm_id_from=pageDriver">https://www.bilibili.com/video/BV15V411n7fM?p=3&amp;spm_id_from=pageDriver</a></li>
+</ol>
+<p>当一个 goroutine 尝试给 mutex 加锁时，如果其他 goroutine 已经加了锁还没有释放，而且当前 mutex 工作在正常模式下，是不是就要开始自旋了呢？不一定，因为，如果当前是单核场景，自旋的 goroutine 在等待持有锁的 goroutine 释放锁，而持有锁的 goroutine 在等待自旋的 goroutine 让去 CPU，这种情况下自旋是没有意义的，而且，如果 GOMAXPROCS = 1，或者当前没有其他的 P 正在运行，也和单核场景类似，同样不需要自旋，除此之外，如果当前 P 的本地 runq 不为空，相较于自旋而言，切换到本地 goroutine 更有效率，所以为保障吞吐量也不会自旋。最终，只有在多核场景下且 GOMAXPROCS 大于 1，且至少有一个 P 正在 running，且当前 P 的本地 runq 为空的情况下，才可以自旋。进入自旋的 goroutine 会先去争抢 mutex 的唤醒标识位，设置 mutexWoken 标识位的目的是，在正常模式下，告知持有锁的 goroutine，在 unlock 的时候不用再唤醒其他 goroutine 了，已经有 goroutine 在这里等待，以免唤醒太多的等待协程，mutex 中的自旋，底层是通过 procyield 循环执行 30 次 PAUSE，自旋次数上限为4，而且每自旋一次都要重新判断是否可以继续自旋，如果锁被释放了，或者锁进入了饥饿模式，亦或者已经自旋了4次，都会结束自旋。结束自旋或者根本不用自旋的 goroutine，就该尝试原子操作修改 mutex 的状态了，把此时 mutex.state 保存到 old 中，把要修改为的新 state 记为 new，如果 old 处于饥饿模式或者加锁状态，goroutine 就得去排队，所以这些情况下排队规模要加1。如果是正常模式，就要尝试设置 lock 位，所以 new 中这一位置为1，如果当前 goroutine 等待的时间已经超过 1ms，而且锁还没被释放，就要将 mutex的状态切换为饥饿模式，注意，这里之所以还要求锁没被释放，是因为如果锁已经释放了，那怎么都得去抢一次啊，要是直接进入饥饿模式就只能排队啦。把排队规模和几个标识位都设置好以后，在执行原子操作修改 state 之前，若是当前 goroutine 持有唤醒标识的话，还要将唤醒标识位重置，因为，接下来无论是要去抢锁，还是单纯的要去排队，如果原子操作成功了，那么要么是成功抢到了锁，要么是成功进到了等待队列里，当前 goroutine 都不再是被唤醒 goroutine 了，所以要释放唤醒标识，而如果原子操作不成功，也就意味着其他 goroutine 在我们保存 mutex.state 到 old 中以后，有修改了 state 的值，当前 goroutine 就要回过头去，继续从自旋检查这里开始再次尝试，所以也需要释放自己之前抢到的唤醒标识位，从头再来。继续展开这个原子操作成功的分支，若果是抢锁操作成功了，那么加锁的 slow path 就可以宣布结束了。如果是排队规模设置成功了，还要决定是排在等待队列的头部还是尾部，如果当前 goroutine 已经排过队了，是在 unlock 时从等待队列中唤醒的，那就要排到等待队列头部，如果是第一次排队，就得排到等待队列尾部，并且从第一次排队开始记录当前 goroutine 的等待时间，接下来就会让出，进到等待队列里了，队列里的 goroutine 被唤醒时，要从上次让出的地方开始继续执行，接下来会判断，如果 mutex 处于正常模式，那就接着从自旋开始抢锁，若果唤醒后 mutex 处于饥饿模式，那就没有其他 goroutine 会和自己抢了，锁已经轮到自己这里，只需要把 mutex.state 中 lock 标识位设置为加锁，把等待队列规模减去1，再看看是不是要切换到正常模式，也就是自己的等待时间是不是小于 1ms，或者等待队列已经空了。最后设置好 mutex.state 就一切 OK 了，这就是加锁操作的 slow path。下面再来看 unlock 的 slow path，进到 unlock 的 slow path 说明除去 lock 标识位以外，剩下的位不全为0，若果处在正常模式，若等待队列为空，或者已经有其他 goroutine 被唤醒或获得了锁，或者锁进入了饥饿模式，那就不需要唤醒某个 goroutine，直接返回即可。否则就要尝试抢占 mutexWorken 标识位，获取唤醒一个 goroutine 的权利，抢占成功后，就会通过 runtime_Semrelease 函数唤醒一个 goroutine，如果抢占不成功就进行循环尝试，直到等待队列为空，或者已经有一个 goroutine 被唤醒或获得了锁，或者锁进入了饥饿模式，则退出循环。而在饥饿模式下，后来的 goroutine 不会争抢锁，而是直接排队，锁的所有权是直接从执行 Unlock 的 goroutine 传递给等待队列首个等待者的，所以不用抢占 mutexWorken 标识位，第一个等待者唤醒后，会继承当前 goroutine 的时间片立刻开始运行，也就是继续 lockSlow 中这里 goroutine 被唤醒以后的逻辑，这就是 unlock 的 slow path。</p>
+
+    </div>
+</div>
+
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        <a rel="prev" href="/post/golang%E4%B8%AD%E7%9A%84mutex/" title="Previous post (older)">
+            <span>Previous</span>
+            Golang中的Mutex
+            </a>
+        
+        
+        
+        <a rel="next" href="/post/golang-gc/" title="Next post (newer)">
+            <span>Next</span>
+            Golang GC
+            </a> 
+        
+    </nav>
+    
+</div>
+</main>
+
+
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+            <a target="_blank" href="https://beian.miit.gov.cn/" style="margin-right:20px;display:inline-block;vertical-align:middle;">豫ICP备2021009077号-1</a>
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
+    </body>
+</html>

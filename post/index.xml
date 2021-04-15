@@ -79,6 +79,17 @@ Stop The World 在打开Write Barrier前有一个依赖，我们需要先停止�
     </item>
     
     <item>
+      <title>Golang中的Mutex——二</title>
+      <link>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84mutex%E4%BA%8C/</link>
+      <pubDate>Fri, 19 Mar 2021 22:33:05 +0800</pubDate>
+      
+      <guid>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84mutex%E4%BA%8C/</guid>
+      <description>Golang 中的 Mutex 以下内容是根据视频地址整理的笔记，看视频更直观。
+总纲  https://www.bilibili.com/video/BV15V411n7fM?p=1  Mutex 这个名称的由来，应该是 mutual exclusion 的前缀组合，俗称“互斥体”或“互斥锁”。go 语言 sync 包中 Mutex 的数据结构是这样的：
+type Mutex struct { state int32 sema uint32 } 因为足够简单，所以不需要额外的初始化，此结构的零值就是一个有效的互斥锁，处于 Unlocked 的状态。state 存储的是互斥锁的状态，加锁和解锁都是通过 atomic 包提供的函数原子性的操作该字段。sema 用作一个信号量，主要用作等待队列。Mutex 有两种模式，在正常模式下，一个尝试加锁的 goroutine 会先自旋几次，尝试通过原子操作获得锁，若几次自旋之后仍不能获得锁，则通过信号量排队等待。所有的等待者会按照先入先出（FIFO）的顺序排队，但是当锁被释放，第一个等待者被唤醒后并不会直接拥有锁，而是需要和后来者竞争，也就是那些处于自旋阶段，尚未排队等待的 goroutine，这种情况下后来者更有优势，一方面，它们正在 CPU 上运行，自然比刚被唤醒的 goroutine 更有优势，另一方面处于自旋状态的 goroutine 可以有很多，而被唤醒的 goroutine 每次只有一个，所以被唤醒的 goroutine 有很大概率拿不到锁，这种情况下它会被重新插入到队列的头部，而不是尾部。而当一个 goroutine 本次加锁等待的时间超过了 1ms 后，它会把当前 Mutex 从正常模式切换至“饥饿模式”，在饥饿模式下，Mutex 的所有权从执行 Unlock 的 goroutine 直接传递给等待队列头部的 goroutine。后来者不会自旋，也不会尝试获得锁，即使 Mutex 处于 Unlocked 状态。它们会直接从队列的尾部排队等待。当一个等待者获得锁之后，它会在一下两种情况时，将 Mutex 由饥饿模式切换回正常模式：一种情况是，它的等待时间小于 1ms，也就是它刚来不久。第二种情况是，它是最后一个等待者，等待队列已经空了，后面自然就没有饥饿的 goroutine 了。综上所述，在正常模式下自旋和排队是同时存在的。执行 Lock 的 goroutine 会先一边自旋，尝试过几次后如果还没拿到锁，就需要去排队等待了。这种排队之前先让大家来抢的模式，能够有更高的吞吐量，因为频繁的挂起、唤醒 goroutine 会带来较多的开销。但是又不能无限制的自旋，要把自选的开销控制在较小的范围内。所以，在正常模式下，Mutex 有更好的性能，但是可能会出现队列尾端的 goroutine 迟迟抢不到锁（尾端延迟）的情况。而饥饿模式下不再自旋尝试，所有 goroutine 都要排队，严格的先来后到，对于防止出现尾端延迟来讲特别重要。</description>
+    </item>
+    
+    <item>
       <title>Golang中的Mutex</title>
       <link>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84mutex/</link>
       <pubDate>Thu, 18 Mar 2021 20:53:09 +0800</pubDate>
