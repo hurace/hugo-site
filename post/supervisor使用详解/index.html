@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> Supervisor使用详解 | 晓瑞</title>
+    
+    
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
+                
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
+
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>Supervisor使用详解</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>November 16, 2020</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
+
+    <div class="article-post">
+    <h3 id="supervisor使用详解">Supervisor使用详解</h3>
+<h4 id="一supervisor简介">一、supervisor简介</h4>
+<p>  Supervisor是用Python开发的一套通用的进程管理程序，能将一个普通的命令行进程变为后台daemon，并监控进程状态，异常退出时能自动重启。它是通过fork/exec的方式把这些被管理的进程当作supervisor的子进程来启动，这样只要在supervisor的配置文件中，把要管理的进程的可执行文件的路径写进去即可。也实现当子进程挂掉的时候，父进程可以准确获取子进程挂掉的信息的，可以选择是否自己启动和报警。supervisor还提供了一个功能，可以为supervisord或者每个子进程，设置一个非root的user，这个user就可以管理它对应的进程。</p>
+<h4 id="二supervisor安装">二、supervisor安装</h4>
+<p><code>yum install supervisor</code></p>
+<h4 id="三supervisor使用">三、supervisor使用</h4>
+<p>supervisor配置文件：<code>/etc/supervisord.conf</code>
+注：supervisor的配置文件默认是不全的，不过在大部分默认的情况下，上面说的基本功能已经满足。</p>
+<p>子进程配置文件路径：<code>/etc/supervisord.d/</code>
+注：默认子进程配置文件为<code>ini</code>格式，可在supervisor主配置文件中修改</p>
+<h4 id="四配置文件说明">四、配置文件说明</h4>
+<p><strong>supervisor.conf配置文件说明：</strong></p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-nginx" data-lang="nginx"><span style="color:#66d9ef">[unix_http_server]</span>
+<span style="color:#e6db74">file=/tmp/supervisor.sock</span>   ;<span style="color:#66d9ef">UNIX</span> <span style="color:#e6db74">socket</span> <span style="color:#e6db74">文件，supervisorctl</span> <span style="color:#e6db74">会使用</span>
+;<span style="color:#66d9ef">chmod=0700</span>                 ;<span style="color:#66d9ef">socket文件的mode，默认是0700</span>
+;<span style="color:#66d9ef">chown=nobody:nogroup</span>       ;<span style="color:#66d9ef">socket文件的owner，格式：uid:gid</span>
+ 
+;<span style="color:#66d9ef">[inet_http_server]</span>         ;<span style="color:#66d9ef">HTTP服务器，提供web管理界面</span>
+;<span style="color:#66d9ef">port=127.0.0.1:9001</span>        ;<span style="color:#66d9ef">Web管理后台运行的IP和端口，如果开放到公网，需要注意安全性</span>
+;<span style="color:#66d9ef">username=user</span>              ;<span style="color:#66d9ef">登录管理后台的用户名</span>
+;<span style="color:#66d9ef">password=123</span>               ;<span style="color:#66d9ef">登录管理后台的密码</span>
+ 
+<span style="color:#e6db74">[supervisord]</span>
+<span style="color:#e6db74">logfile=/tmp/supervisord.log</span> ;<span style="color:#66d9ef">日志文件，默认是</span> $CWD/supervisord.log
+<span style="color:#e6db74">logfile_maxbytes=50MB</span>        ;<span style="color:#66d9ef">日志文件大小，超出会rotate，默认</span> <span style="color:#e6db74">50MB，如果设成0，表示不限制大小</span>
+<span style="color:#e6db74">logfile_backups=10</span>           ;<span style="color:#66d9ef">日志文件保留备份数量默认10，设为0表示不备份</span>
+<span style="color:#e6db74">loglevel=info</span>                ;<span style="color:#66d9ef">日志级别，默认info，其它:</span> <span style="color:#e6db74">debug,warn,trace</span>
+<span style="color:#e6db74">pidfile=/tmp/supervisord.pid</span> ;<span style="color:#66d9ef">pid</span> <span style="color:#e6db74">文件</span>
+<span style="color:#e6db74">nodaemon=false</span>               ;<span style="color:#66d9ef">是否在前台启动，默认是false，即以</span> <span style="color:#e6db74">daemon</span> <span style="color:#e6db74">的方式启动</span>
+<span style="color:#e6db74">minfds=1024</span>                  ;<span style="color:#66d9ef">可以打开的文件描述符的最小值，默认</span> <span style="color:#ae81ff">1024</span>
+<span style="color:#e6db74">minprocs=200</span>                 ;<span style="color:#66d9ef">可以打开的进程数的最小值，默认</span> <span style="color:#ae81ff">200</span>
+ 
+<span style="color:#e6db74">[supervisorctl]</span>
+<span style="color:#e6db74">serverurl=unix:///tmp/supervisor.sock</span> ;<span style="color:#66d9ef">通过UNIX</span> <span style="color:#e6db74">socket连接supervisord，路径与unix_http_server部分的file一致</span>
+;<span style="color:#66d9ef">serverurl=http://127.0.0.1:9001</span> ; <span style="color:#66d9ef">通过HTTP的方式连接supervisord</span>
+ 
+; <span style="color:#66d9ef">[program:xx]是被管理的进程配置参数，xx是进程的名称</span>
+<span style="color:#e6db74">[program:xx]</span>
+<span style="color:#e6db74">command=/opt/apache-tomcat-8.0.35/bin/catalina.sh</span> <span style="color:#e6db74">run</span>  ; <span style="color:#66d9ef">程序启动命令</span>
+<span style="color:#e6db74">autostart=true</span>       ; <span style="color:#66d9ef">在supervisord启动的时候也自动启动</span>
+<span style="color:#e6db74">startsecs=10</span>         ; <span style="color:#66d9ef">启动10秒后没有异常退出，就表示进程正常启动了，默认为1秒</span>
+<span style="color:#e6db74">autorestart=true</span>     ; <span style="color:#66d9ef">程序退出后自动重启,可选值：[unexpected,true,false]，默认为unexpected，表示进程意外杀死后才重启</span>
+<span style="color:#e6db74">startretries=3</span>       ; <span style="color:#66d9ef">启动失败自动重试次数，默认是3</span>
+<span style="color:#e6db74">user=tomcat</span>          ; <span style="color:#66d9ef">用哪个用户启动进程，默认是root</span>
+<span style="color:#e6db74">priority=999</span>         ; <span style="color:#66d9ef">进程启动优先级，默认999，值小的优先启动</span>
+<span style="color:#e6db74">redirect_stderr=true</span> ; <span style="color:#66d9ef">把stderr重定向到stdout，默认false</span>
+<span style="color:#e6db74">stdout_logfile_maxbytes=20MB</span>  ; <span style="color:#66d9ef">stdout</span> <span style="color:#e6db74">日志文件大小，默认50MB</span>
+<span style="color:#e6db74">stdout_logfile_backups</span> = <span style="color:#ae81ff">20</span>   ; <span style="color:#66d9ef">stdout</span> <span style="color:#e6db74">日志文件备份数，默认是10</span>
+; <span style="color:#66d9ef">stdout</span> <span style="color:#e6db74">日志文件，需要注意当指定目录不存在时无法正常启动，所以需要手动创建目录（supervisord</span> <span style="color:#e6db74">会自动创建日志文件）</span>
+<span style="color:#e6db74">stdout_logfile=/opt/apache-tomcat-8.0.35/logs/catalina.out</span>
+<span style="color:#e6db74">stopasgroup=false</span>     ;<span style="color:#66d9ef">默认为false,进程被杀死时，是否向这个进程组发送stop信号，包括子进程</span>
+<span style="color:#e6db74">killasgroup=false</span>     ;<span style="color:#66d9ef">默认为false，向进程组发送kill信号，包括子进程</span>
+ 
+;<span style="color:#66d9ef">包含其它配置文件</span>
+<span style="color:#e6db74">[include]</span>
+<span style="color:#e6db74">files</span> = <span style="color:#e6db74">relative/directory/*.ini</span>    ;<span style="color:#66d9ef">可以指定一个或多个以.ini结束的配置文件</span>
+</code></pre></div><p><strong>子进程配置文件说明：</strong>
+  给需要管理的子进程(程序)编写一个配置文件，放在<code>/etc/supervisor.d/</code>目录下，以<code>.ini</code>作为扩展名（每个进程的配置文件都可以单独分拆也可以把相关的脚本放一起）。如任意定义一个和脚本相关的项目名称的选项组（<code>/etc/supervisord.d/test.conf</code>）：</p>
+<pre><code>#项目名
+[program:blog]
+#脚本目录
+directory=/opt/bin
+#脚本执行命令
+command=/usr/bin/python /opt/bin/test.py
+
+#supervisor启动的时候是否随着同时启动，默认True
+autostart=true
+#当程序exit的时候，这个program不会自动重启,默认unexpected，设置子进程挂掉后自动重启的情况，有三个选项，false,unexpected和true。如果为false的时候，无论什么情况下，都不会被重新启动，如果为unexpected，只有当进程的退出码不在下面的exitcodes里面定义的
+autorestart=false
+#这个选项是子进程启动多少秒之后，此时状态如果是running，则我们认为启动成功了。默认值为1
+startsecs=1
+
+#脚本运行的用户身份 
+user = test
+
+#日志输出 
+stderr_logfile=/tmp/blog_stderr.log 
+stdout_logfile=/tmp/blog_stdout.log 
+#把stderr重定向到stdout，默认 false
+redirect_stderr = true
+#stdout日志文件大小，默认 50MB
+stdout_logfile_maxbytes = 20MB
+#stdout日志文件备份数
+stdout_logfile_backups = 20
+</code></pre><h4 id="五supervisor命令说明">五、supervisor命令说明</h4>
+<pre><code>supervisorctl status        //查看所有进程的状态
+supervisorctl stop es       //停止es
+supervisorctl start es      //启动es
+supervisorctl restart       //重启es
+supervisorctl update        //配置文件修改后使用该命令加载新的配置
+supervisorctl reload        //重新启动配置中的所有程序
+
+systemctl start supervisord.service     //启动supervisor并加载默认配置文件
+systemctl enable supervisord.service    //将supervisor加入开机启动项
+</code></pre>
+    </div>
+</div>
+
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        
+        
+        <a rel="next" href="/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="Next post (newer)">
+            <span>Next</span>
+            线程模型
+            </a> 
+        
+    </nav>
+    
+</div>
+</main>
+
+
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+            <a target="_blank" href="https://beian.miit.gov.cn/" style="margin-right:20px;display:inline-block;vertical-align:middle;">豫ICP备2021009077号-1</a>
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
+    </body>
+</html>
