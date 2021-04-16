@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="zh-cn">
+    
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="theme-color" content="dark">
+    <title> Golang中的slice | 晓瑞</title>
+    
+    
+    
+    <link rel="stylesheet" href="/sass/main.min.4e90cee935c47394b47f9cb7ffe8e3ffab18b88d82fea203918cc3f92eec5eb2.css">
+</head>
+
+    <body class="dark">
+        <nav class="navbar">
+    <div class="container">
+        <div class="flex">
+            <div>
+                <a class="brand" href="/">
+                    
+                    晓瑞
+                    </a>
+            </div>
+            <div class="flex">
+                
+                <button id="dark-mode-button"></button>
+            </div>
+            </div>
+    </div>
+</nav>
+        <main>
+            
+
+<div class="container">
+    <article>
+        <header class="article-header">
+            <div class="thumb">
+                <div>
+                    <h1>Golang中的slice</h1>
+                    <div class="post-meta">
+                        <div>
+                            By  on <time>February 16, 2021</time>
+                        </div>
+                        <div class="tags">
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+    </article>
+
+    <div class="article-post">
+    <p>slice 有三个部分
+第一部分：元素存哪里
+第二部分：存了多少个元素
+第三部分：可以存多少个元素</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data</th>
+<th style="text-align:right">len</th>
+<th style="text-align:center">cap</th>
+</tr>
+</thead>
+</table>
+<p>举个例子，声明一个整型 slice</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ints</span> []<span style="color:#66d9ef">int</span>
+</code></pre></div><p>变量 ints 由这样3个部分组成，slice 的元素要存在一段连续的内存中，实际上就是个数组，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data=nil</th>
+<th style="text-align:right">0</th>
+<th style="text-align:center">0</th>
+</tr>
+</thead>
+</table>
+<p>data 就是这个底层数组的起始地址，但是目前只分配了这个切片结构，还没有分配底层数组，所以 data = nil，存储元素个数为0，容量也为0。</p>
+<p>如果通过 make 的方式定义这个变量</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">ints</span> []<span style="color:#66d9ef">int</span> = make([]<span style="color:#66d9ef">int</span>, <span style="color:#ae81ff">2</span>,<span style="color:#ae81ff">5</span>)
+</code></pre></div><p>不仅会分配这三部分结构，还会开辟一段内存作为它的底层数组，这里 make 会为 ints 开辟一段容纳5个整型元素的内存，还会把它们初始化为整型的默认值0，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">0</th>
+<th style="text-align:right">0</th>
+<th style="text-align:center">0</th>
+<th style="text-align:center">0</th>
+<th style="text-align:center">0</th>
+</tr>
+</thead>
+</table>
+<p>但是目前这个 slice 变量只存储了2个元素，所以 data 指向底层数组头部，len 为2，cap 为5。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data</th>
+<th style="text-align:right">2</th>
+<th style="text-align:center">5</th>
+</tr>
+</thead>
+</table>
+<p>添个元素试试，<code>ints = append(ints, 1)</code>，已经存了两个，所以他是第3个，len 修改为3。已经存储的元素是可以安全读写的，但是超出这个范围就属于越界访问，会发生 panic。</p>
+<p>再来个例子，这一个我们看看字符串类型的 slice，但是不用 make，来试试 new，new 一个 slice 变量<code>ps := new([]string)</code>，同样会分配这三部分结构</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">nil</th>
+<th style="text-align:right">0</th>
+<th style="text-align:center">0</th>
+</tr>
+</thead>
+</table>
+<p>但它不负责底层数组但分配，所以 data=nil，len、cap 都是0，new 的返回值就是 slice 结构的起始地址，所以 ps 它就是个地址，此时这个 slice 变量还没有底层数组，像这样的操作<code>(*ps)[0] = &quot;eggo&quot;</code>是不允许的，那谁来给他分配底层数组呢？append</p>
+<p>通过 append 的方式添加元素，<code>*ps = append(*ps, &quot;eggo&quot;)</code>，它就会给 slice 开辟底层数组，这里需要容纳一个字符串元素的数组，而字符串类型由两部分组成，一个是内容起始地址，指向字符串内容，还有一个是字节长度。</p>
+<p>接下来我们看看和 slice 密切相关的底层数组，数组就是同种类型的元素一个挨一个的存储，int 型 slice 底层就是 int 数组，string 型的 slice 底层就是 string 数组，但是这里（data）并不是必须指向数组的开头。</p>
+<p>来看个例子：变量 arr 是容量为10的整型数组，<code>arr := [int]{0,1,2,3,4,5,6,7,8,9}</code>，</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">0</th>
+<th style="text-align:right">1</th>
+<th style="text-align:center">2</th>
+<th style="text-align:center">3</th>
+<th style="text-align:center">4</th>
+<th style="text-align:center">5</th>
+<th style="text-align:center">6</th>
+<th style="text-align:center">7</th>
+<th style="text-align:center">8</th>
+<th style="text-align:center">9</th>
+</tr>
+</thead>
+</table>
+<p>注意数组容量声明了就不能变了，我们可以把不同的 slice 关联到同一个数组，就像这样，它们会共用底层数组。</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s1</span> []<span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">arr</span>[<span style="color:#ae81ff">1</span>:<span style="color:#ae81ff">4</span>]
+<span style="color:#66d9ef">var</span> <span style="color:#a6e22e">s2</span> []<span style="color:#66d9ef">int</span> = <span style="color:#a6e22e">arr</span>[<span style="color:#ae81ff">7</span>:]
+</code></pre></div><p>具体怎样，来看 s1 和 s2 的具体结构就明白了，s1 的元素是 arr 索引1到4的左闭右开，（1,2,3）这3个元素算是添加到 s1 中了，但是容量是从 data 这里开始到底层数组结束共有9个元素。</p>
+<p>s1</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data</th>
+<th style="text-align:right">3</th>
+<th style="text-align:center">9</th>
+</tr>
+</thead>
+</table>
+<p>同样的 s2 的元素从索引7开始直到结束，共3个元素，容量也是3。</p>
+<p>s2</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data</th>
+<th style="text-align:right">3</th>
+<th style="text-align:center">3</th>
+</tr>
+</thead>
+</table>
+<p>slice 访问和修改的都是底层数组的元素，这样<code>s1[3]</code>就算访问越界了，可以修改<code>s1 = [1:5]</code>，或者通过 append 添加元素，来扩大可读写的区间范围，现在<code>s1[3]</code>就可以正常访问了。</p>
+<p>此时如果再给 s2 添加元素会怎么样<code>s2 = append(s2, 10)</code>，这个底层数组（arr）是不能用了，得开辟新数组，原来的元素要拷过来，还要添加新元素，元素个数改为4，容量扩到6，这些 slice 和底层数组的关系都清晰了吧。</p>
+<p>s2</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">data</th>
+<th style="text-align:right">4</th>
+<th style="text-align:center">6</th>
+</tr>
+</thead>
+</table>
+<p>不过，还有个问题，我们只给 s2 添加了一个元素，s2 怎么从3扩到6了呢？那就要看 slice 的扩容规则了：
+扩容规则第一步，预估扩容后的容量，怎么预估？来看个例子：</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">ints</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>} <span style="color:#75715e">//这里扩容前容量为 oldCap = 2
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">ints</span> = append(<span style="color:#a6e22e">ints</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>) <span style="color:#75715e">//添加3个元素，那至少得扩容到5（cap=5）吧，难道就预估到5？
+</span></code></pre></div><p>这么简单粗暴？当然不是，预估也是有规则的：
+如果扩容前容量翻倍，还小于所需最小容量<code>oldCap * 2 &lt; cap</code>，那么预估容量就等于所需最小容量
+否则，就要再细分，如果扩容前元素个数小于 1024，<code>oldLen &lt; 1024 --&gt; newCap = oldCap * 2</code>，那就直接翻倍没商量。
+如果大于等于 1024，那就 先扩个四分之一，也就是扩到原来到1.25倍，<code>oldLen &gt;= 1024 newCap = oldCap * 1.25</code></p>
+<p>所以 ints 扩容前容量翻倍了（2*2 = 4）还是小于5，那预估容量就是5，ok，预估容量搞定！</p>
+<p>来到第二步：预估容量只是预估的元素“个数”，这么多元素需要占用多少内存呢，这就和元素类型挂钩了，用预估的容量乘以元素类型的大小，得到的就是所需内存，难道直接分配这么多内存就ok了？并不是。</p>
+<p>简单来说是因为，在许多编程语言中，申请分配内存，并不是直接与操作系统交涉，而是和语言自身实现的内存管理模块，他会提前向操作系统申请一批内存，分成常用的规格管理起来</p>
+<p><code>8, 16, 32, 48, 64, 80, 96, 112, ...</code></p>
+<p>我们申请内存时，它会帮我们匹配到足够大且最接近的规格，这就是第三步要做的事，将预估申请内存匹配到合适的内存规格。</p>
+<p>在之前的例子中，与共容量为5，64位下就需要申请40字节存放扩容后的底层数组，而实际申请会匹配到48字节，那这么大的内存能装多少个元素呢？在这个例子中每个元素占8字节，一共能装6个，总算是拿到扩容后的容量了。</p>
+<p>趁热打铁，我们再来个例子练练手，a 是 string 类型的 slice，64位下每个元素占16字节</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;My&#34;</span>, <span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;is&#34;</span>}
+<span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>, <span style="color:#e6db74">&#34;eggo&#34;</span>)
+</code></pre></div><p>第一步：扩容前容量是3，添加一个元素，最少要扩容到4，原容量翻倍，大于4，和1024比，小于1024，直接翻倍，预估容量为6
+第二步：预估容量乘以元素大小得到96字节
+第三步：匹配到内存规格<code>8, 16, 32, 48, 64, 80, 96, 112, ...</code>96字节
+所以，最终扩容后容量为6，ok搞定！</p>
+
+    </div>
+</div>
+
+<div class="container">
+    
+    <nav class="flex container suggested">
+        
+        <a rel="prev" href="/post/supervisor%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3/" title="Previous post (older)">
+            <span>Previous</span>
+            Supervisor使用详解
+            </a>
+        
+        
+        
+        <a rel="next" href="/post/%E7%BA%BF%E7%A8%8B%E6%A8%A1%E5%9E%8B/" title="Next post (newer)">
+            <span>Next</span>
+            线程模型
+            </a> 
+        
+    </nav>
+    
+</div>
+</main>
+
+
+        </main>
+        <footer class="footer flex">
+    <section class="container">
+        <nav class="footer-links">
+            
+            <a target="_blank" href="https://beian.miit.gov.cn/" style="margin-right:20px;display:inline-block;vertical-align:middle;">豫ICP备2021009077号-1</a>
+        </nav>
+    </section>
+    
+    <script async src="/js/features.min.c5d8f3350f5a652f526b982306299353824299adb7a3bd261ecffacc47087f66.js"></script>
+</footer>
+    </body>
+</html>

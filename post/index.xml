@@ -149,6 +149,22 @@ Go语言中的并发就是使用的这种实现方式，Go为了实现该模型�
     </item>
     
     <item>
+      <title>Golang中的slice</title>
+      <link>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84slice/</link>
+      <pubDate>Tue, 16 Feb 2021 23:02:13 +0800</pubDate>
+      
+      <guid>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84slice/</guid>
+      <description>slice 有三个部分 第一部分：元素存哪里 第二部分：存了多少个元素 第三部分：可以存多少个元素
+   data len cap    举个例子，声明一个整型 slice
+var ints []int 变量 ints 由这样3个部分组成，slice 的元素要存在一段连续的内存中，实际上就是个数组，
+   data=nil 0 0    data 就是这个底层数组的起始地址，但是目前只分配了这个切片结构，还没有分配底层数组，所以 data = nil，存储元素个数为0，容量也为0。
+如果通过 make 的方式定义这个变量
+var ints []int = make([]int, 2,5) 不仅会分配这三部分结构，还会开辟一段内存作为它的底层数组，这里 make 会为 ints 开辟一段容纳5个整型元素的内存，还会把它们初始化为整型的默认值0，
+   0 0 0 0 0    但是目前这个 slice 变量只存储了2个元素，所以 data 指向底层数组头部，len 为2，cap 为5。
+   data 2 5    添个元素试试，ints = append(ints, 1)，已经存了两个，所以他是第3个，len 修改为3。已经存储的元素是可以安全读写的，但是超出这个范围就属于越界访问，会发生 panic。</description>
+    </item>
+    
+    <item>
       <title>Supervisor使用详解</title>
       <link>https://hurace.net/post/supervisor%E4%BD%BF%E7%94%A8%E8%AF%A6%E8%A7%A3/</link>
       <pubDate>Mon, 16 Nov 2020 14:35:55 +0800</pubDate>
