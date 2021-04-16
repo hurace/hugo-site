@@ -53,10 +53,10 @@
     </article>
 
     <div class="article-post">
-    <p>slice 有三个部分
-第一部分：元素存哪里
-第二部分：存了多少个元素
-第三部分：可以存多少个元素</p>
+    <p>slice 有三个部分</p>
+<p>第一部分：元素存哪里</p>
+<p>第二部分：存了多少个元素</p>
+<p>第三部分：可以存多少个元素</p>
 <table>
 <thead>
 <tr>
@@ -175,24 +175,44 @@
 扩容规则第一步，预估扩容后的容量，怎么预估？来看个例子：</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">ints</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>} <span style="color:#75715e">//这里扩容前容量为 oldCap = 2
 </span><span style="color:#75715e"></span><span style="color:#a6e22e">ints</span> = append(<span style="color:#a6e22e">ints</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>) <span style="color:#75715e">//添加3个元素，那至少得扩容到5（cap=5）吧，难道就预估到5？
-</span></code></pre></div><p>这么简单粗暴？当然不是，预估也是有规则的：
-如果扩容前容量翻倍，还小于所需最小容量<code>oldCap * 2 &lt; cap</code>，那么预估容量就等于所需最小容量
-否则，就要再细分，如果扩容前元素个数小于 1024，<code>oldLen &lt; 1024 --&gt; newCap = oldCap * 2</code>，那就直接翻倍没商量。
-如果大于等于 1024，那就 先扩个四分之一，也就是扩到原来到1.25倍，<code>oldLen &gt;= 1024 newCap = oldCap * 1.25</code></p>
+</span></code></pre></div><p>这么简单粗暴？当然不是，预估也是有规则的：</p>
+<p>如果扩容前容量翻倍，还小于所需最小容量<code>oldCap * 2 &lt; cap</code>，那么预估容量就等于所需最小容量</p>
+<p>否则，就要再细分，如果扩容前元素个数小于 1024，<code>oldLen &lt; 1024 --&gt; newCap = oldCap * 2</code>，那就直接翻倍没商量。</p>
+<p>如果大于等于 1024，那就 先扩个四分之一，也就是扩到原来到1.25倍，<code>oldLen &gt;= 1024 newCap = oldCap * 1.25</code></p>
 <p>所以 ints 扩容前容量翻倍了（2*2 = 4）还是小于5，那预估容量就是5，ok，预估容量搞定！</p>
 <p>来到第二步：预估容量只是预估的元素“个数”，这么多元素需要占用多少内存呢，这就和元素类型挂钩了，用预估的容量乘以元素类型的大小，得到的就是所需内存，难道直接分配这么多内存就ok了？并不是。</p>
 <p>简单来说是因为，在许多编程语言中，申请分配内存，并不是直接与操作系统交涉，而是和语言自身实现的内存管理模块，他会提前向操作系统申请一批内存，分成常用的规格管理起来</p>
 <p><code>8, 16, 32, 48, 64, 80, 96, 112, ...</code></p>
 <p>我们申请内存时，它会帮我们匹配到足够大且最接近的规格，这就是第三步要做的事，将预估申请内存匹配到合适的内存规格。</p>
 <p>在之前的例子中，与共容量为5，64位下就需要申请40字节存放扩容后的底层数组，而实际申请会匹配到48字节，那这么大的内存能装多少个元素呢？在这个例子中每个元素占8字节，一共能装6个，总算是拿到扩容后的容量了。</p>
-<p>趁热打铁，我们再来个例子练练手，a 是 string 类型的 slice，64位下每个元素占16字节</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">ints</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">int</span>{<span style="color:#ae81ff">1</span>, <span style="color:#ae81ff">2</span>}
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len: %d, cap: %d\n&#34;</span>, len(<span style="color:#a6e22e">ints</span>), cap(<span style="color:#a6e22e">ints</span>))
+    <span style="color:#a6e22e">ints</span> = append(<span style="color:#a6e22e">ints</span>, <span style="color:#ae81ff">3</span>, <span style="color:#ae81ff">4</span>, <span style="color:#ae81ff">5</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len: %d, cap: %d\n&#34;</span>, len(<span style="color:#a6e22e">ints</span>), cap(<span style="color:#a6e22e">ints</span>))
+}
+
+<span style="color:#75715e">//以上程序运行结果：
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">len</span>: <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">cap</span>: <span style="color:#ae81ff">2</span>
+<span style="color:#a6e22e">len</span>: <span style="color:#ae81ff">5</span>, <span style="color:#a6e22e">cap</span>: <span style="color:#ae81ff">6</span>
+</code></pre></div><p>趁热打铁，我们再来个例子练练手，a 是 string 类型的 slice，64位下每个元素占16字节</p>
 <div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;My&#34;</span>, <span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;is&#34;</span>}
 <span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>, <span style="color:#e6db74">&#34;eggo&#34;</span>)
-</code></pre></div><p>第一步：扩容前容量是3，添加一个元素，最少要扩容到4，原容量翻倍，大于4，和1024比，小于1024，直接翻倍，预估容量为6
-第二步：预估容量乘以元素大小得到96字节
-第三步：匹配到内存规格<code>8, 16, 32, 48, 64, 80, 96, 112, ...</code>96字节
-所以，最终扩容后容量为6，ok搞定！</p>
+</code></pre></div><p>第一步：扩容前容量是3，添加一个元素，最少要扩容到4，原容量翻倍，大于4，和1024比，小于1024，直接翻倍，预估容量为6</p>
+<p>第二步：预估容量乘以元素大小得到96字节</p>
+<p>第三步：匹配到内存规格<code>8, 16, 32, 48, 64, 80, 96, 112, ...</code>96字节</p>
+<p>所以，最终扩容后容量为6，ok搞定！</p>
+<div class="highlight"><pre style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-go" data-lang="go"><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+    <span style="color:#a6e22e">a</span> <span style="color:#f92672">:=</span> []<span style="color:#66d9ef">string</span>{<span style="color:#e6db74">&#34;My&#34;</span>, <span style="color:#e6db74">&#34;name&#34;</span>, <span style="color:#e6db74">&#34;is&#34;</span>}
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len: %d, cap: %d\n&#34;</span>, len(<span style="color:#a6e22e">a</span>), cap(<span style="color:#a6e22e">a</span>))
+    <span style="color:#a6e22e">a</span> = append(<span style="color:#a6e22e">a</span>, <span style="color:#e6db74">&#34;eggo&#34;</span>)
+    <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Printf</span>(<span style="color:#e6db74">&#34;len: %d, cap: %d\n&#34;</span>, len(<span style="color:#a6e22e">a</span>), cap(<span style="color:#a6e22e">a</span>))
+}
 
+<span style="color:#75715e">//以上程序运行结果：
+</span><span style="color:#75715e"></span><span style="color:#a6e22e">len</span>: <span style="color:#ae81ff">2</span>, <span style="color:#a6e22e">cap</span>: <span style="color:#ae81ff">2</span>
+<span style="color:#a6e22e">len</span>: <span style="color:#ae81ff">5</span>, <span style="color:#a6e22e">cap</span>: <span style="color:#ae81ff">6</span>
+</code></pre></div>
     </div>
 </div>
 

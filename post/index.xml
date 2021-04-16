@@ -154,7 +154,10 @@ Go语言中的并发就是使用的这种实现方式，Go为了实现该模型�
       <pubDate>Tue, 16 Feb 2021 23:02:13 +0800</pubDate>
       
       <guid>https://hurace.net/post/golang%E4%B8%AD%E7%9A%84slice/</guid>
-      <description>slice 有三个部分 第一部分：元素存哪里 第二部分：存了多少个元素 第三部分：可以存多少个元素
+      <description>slice 有三个部分
+第一部分：元素存哪里
+第二部分：存了多少个元素
+第三部分：可以存多少个元素
    data len cap    举个例子，声明一个整型 slice
 var ints []int 变量 ints 由这样3个部分组成，slice 的元素要存在一段连续的内存中，实际上就是个数组，
    data=nil 0 0    data 就是这个底层数组的起始地址，但是目前只分配了这个切片结构，还没有分配底层数组，所以 data = nil，存储元素个数为0，容量也为0。
